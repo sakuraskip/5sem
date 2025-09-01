@@ -17,6 +17,11 @@ const server = http.createServer((request,response)=>
       response.setHeader('Content-Type','image/png');
       fs.createReadStream(__dirname + "\\image.png").pipe(response);
     }
+    if(request.url === '/api/name')
+    {
+      response.setHeader('Content-Type','text/plain ; charset=utf-8');
+      response.end('ваша фамилия имя и отчество');
+    }
 
 })
 
