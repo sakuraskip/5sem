@@ -10,16 +10,17 @@
     <script>
         const url = 'http://localhost:5000/api/name';
         var div = document.getElementById("getresult");
-var xml = new XMLHttpRequest();
-xml.open('GET',url,true)
-xml.onreadystatechange = function() 
-{
-    if(xml.status === 200)
-{
-    div.innerText = xml.responseText;
-}
-}
-xml.send();
+        var xml = new XMLHttpRequest();
+        xml.open('GET',url,true)
+        xml.responseText
+        xml.onreadystatechange = function() 
+        {
+            if(xml.status === 200)
+            {
+                div.innerText = xml.responseText;
+            }
+        }
+        xml.send();
 
     </script>
 </body>
