@@ -1,35 +1,51 @@
 const http = require('http');
-const prompt = require("prompt-sync")({sigint:true})
+const prompt = require("prompt")
 
 const host = '127.0.0.1';
 const port = 5000;
 const appMode = ["norm","idle","stop","test"];
 
 let currentMode = "norm";
+
+prompt.start();
 const handleUserInput = function()
 {
-    let userinput = prompt();
-    
+   prompt.get(['mode'],function(error,result)
+{
+    if(error)
+    {
+        console.log(`handleUserInput: ${error}`);
+        return handleUserInput();
+    }
+    let userinput = result.mode;
+    if(userinput === 'exit')
+    {
+        server.close();
+        process.exit(0);
+    }
     if(!appMode.includes(userinput))
     {
        console.log(userinput);
-       return userinput;
+       return handleUserInput();
     }
+    
     console.log("switch: "+ currentMode + "-->" + userinput);
     currentMode = userinput;
-    return userinput;
+    handleUserInput();
+}); 
 }
 
 const server = http.createServer((request,response)=>
 {
-    let userinput = handleUserInput();
-    if(userinput === "exit")
-    {
-        server.close();
-    }
+    
     response.statusCode = 200;
+    response.setHeader("Content-Type",'text/html')
     response.end(`<h1> ${currentMode}`);
     
 })
 
-server.listen(port,host);
+server.listen(port,host,()=>
+{
+    console.log(`server listening at ${host}:${port}`);
+    handleUserInput();
+});
