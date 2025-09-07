@@ -3,20 +3,21 @@ const url = require('url')
 const host = '127.0.0.1';
 const port = 8000;
 
-const CalculateFactorial = function(k)
+const CalculateFactorial = function(num,callback)
 {
-    if(k < 0 || isNaN(k))
+    if(num < 0 || isNaN(num))
     {
-        throw new Error("k меньше нуля")
+        return process.nextTick(()=>callback(new Error("num is NaN or less than 0")))
     }
-    if(k === 1 || k === 0)
+    const CalculateFactorialHelper = function(num,accumulator)
     {
-        return 1
+        if(num ===0 || num === 1)
+        {
+            return process.nextTick(()=>callback(null,accumulator))
+        }
+        process.nextTick(()=>CalculateFactorialHelper(num-1,accumulator*num));
     }
-    else
-    {
-        return k * CalculateFactorial(k-1);
-    }
+    CalculateFactorialHelper(num,1);
 }
 
 const server = http.createServer((request,response)=>
@@ -27,11 +28,21 @@ const server = http.createServer((request,response)=>
     if(parsedUrl.pathname === '/fact')
     {
         let k = Number(parsedUrl.query.k);
-        let fact = CalculateFactorial(k);
-        let resultString = {k,fact};
+       CalculateFactorial(k,(error,fact)=>
+    {
+        if(error)
+        {
+            console.error(error);
+        }
+        else
+        {
+            let resultString = {k,fact};
 
-        const jsonResultString = JSON.stringify(resultString);
-        response.end(jsonResultString);
+            const jsonResultString = JSON.stringify(resultString);
+            response.end(jsonResultString);
+        }
+    })
+       
 
     }
     
