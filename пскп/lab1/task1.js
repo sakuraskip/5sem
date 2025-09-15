@@ -6,7 +6,11 @@ const server = http.createServer((request,response)=>
 {
     response.statusCode = 200;
     response.setHeader('Content-Type','text/html');
-    response.end('<h1>helo world</h1> ');
+    response.end('<h1>hello world</h1> ');
 })
 
-server.listen(port,host);
+server.listen(port,host,()=>
+{
+    console.log("server started");
+    
+});

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <p>
+        <a id="link-id" href="https://belstu.by/" class="link" target="_blank">бгту</a>
+    </p>
+    <br/>
+    <button id="browser-button">информация о браузере</button>
+    <div id="browser-info"></div>
+</body>
+<script>
+
+let button = document.getElementById("browser-button");
+let divBrowserInfo = document.getElementById("browser-info");
+function buttonClick()
+{
+    let appCodeName = "appCodeName = " + navigator.appCodeName;
+    let appName = "appname = " + navigator.appName;
+    let appVersion = "appVersion = " +navigator.appVersion;
+    let userAgent = "useragent = " + navigator.userAgent;
+    
+    let browserInfo = [appCodeName,appName,appVersion,userAgent];
+    browserInfo.forEach(element => {
+        let div = document.createElement("div");
+        div.innerHTML = element;
+        divBrowserInfo.appendChild(div);
+    });
+    console.log("hello world")
+}
+button.addEventListener("click",buttonClick)
+
+</script>
+</html>

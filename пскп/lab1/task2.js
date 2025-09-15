@@ -14,13 +14,27 @@ const server = http.createServer((request,response)=>
     {
         response.statusCode = 200;
         response.setHeader('Content-Type','text/html');
-        response.end(`<h1>method : ${request.method}</h1>
-        <h2>uri : ${request.url}
-        <h3>http version : ${request.httpVersion}
-        <h3> request body: ${body},</h3>`);
+
+        const headersHtml = Object.entries(request.headers)
+      .map(([key, value]) => `<p>${key}: ${value}</p>`)
+     .join(' ');
+       
+
+    response.end(`
+
+        <h1>request headers</h1>
+      <div>${headersHtml}</div>
+      <h2> method: ${request.method}</h2>
+      <h2> uri: ${request.url} </h2>
+      <h3>request body: ${body}</h3>
+    `);
+
         
     })
     
 })
 
-server.listen(port,host);
+server.listen(port,host,()=>
+{
+    console.log("server started");
+});
