@@ -4,27 +4,26 @@ size 7M
 autoextend on
 next 5m
 maxsize 20m
-extent management local
-
---
+extent management local;
+--drop tablespace TS_SAV including contents and datafiles;
 create temporary tablespace TS_SAV_temp
 tempfile 'TS_SAV2_temp.dbf'
 size 5m
 autoextend on
 next 3m
 maxsize 30m
-extent management local uniform size 256k
-
+extent management local uniform size 256k;
+--drop tablespace TS_SAV_temp including contents and datafiles;
 --
 select tablespace_name from dba_tablespaces;
 select * from dba_data_files;
 
---
 create role C##RL_SAVCORE;
 grant create session to C##RL_SAVCORE; 
 grant create table to C##RL_SAVCORE;
 grant create view to C##RL_SAVCORE;
 grant create procedure to C##RL_SAVCORE
+--drop role C##RL_SAVCORE cascade;
 
 select * from dba_roles where ROLE like 'C##RL_SAVCORE';
 select * from dba_sys_privs where GRANTEE like 'C##RL_SAVCORE';
@@ -40,6 +39,7 @@ password_reuse_time 10
 connect_time 180
 idle_time 30
 --
+--drop profile C##PF_SAVCORE cascade;
 
 select * from dba_profiles;
 select * from dba_profiles where profile ='C##PF_SAVCORE';
@@ -51,12 +51,12 @@ temporary tablespace TS_SAV_temp
 profile C##PF_SAVCORE
 account unlock
 password expire
+--drop user C##SAVCORE cascade;
 
 select * from dba_users;
 
 grant C##RL_SAVCORE to C##SAVCORE;
 
---
 create tablespace SAV_QDATA
 datafile 'qdata1.dbf'
 size 10m
@@ -65,9 +65,10 @@ next 5m
 maxsize 20m
 offline
 extent management local
-
 alter tablespace SAV_QDATA online;
+
+--drop tablespace SAV_QDATA including contents and datafiles;
+
 
 alter user C##SAVCORE quota 2m on SAV_QDATA
 
-select * from Dictionary
