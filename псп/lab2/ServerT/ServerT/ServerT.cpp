@@ -109,6 +109,16 @@ void processClientApp(SOCKET sC)
             if ((lengthInputBuffer = recv(sC, inputBuffer, sizeof(inputBuffer), NULL)) == SOCKET_ERROR)
                 throw SetErrorMsgText("recv: ", WSAGetLastError());
 
+            string answerBuffer = inputBuffer;
+            while ((endlinePos = answerBuffer.find('\n')) != string::npos)
+            {
+                singleMessage = answerBuffer.substr(0, endlinePos);
+                cout << "client says AGAIN: " << singleMessage << endl;
+                answerBuffer.erase(0, endlinePos + 1);
+            }
+
+
+
         }
 
         memset(inputBuffer, 0, sizeof(inputBuffer));
@@ -136,6 +146,8 @@ int main()
         servSettings.sin_port = htons(2000);
         servSettings.sin_addr.S_un.S_addr = INADDR_ANY;
 
+        cout << servSettings.sin_port << endl;
+
         if (bind(sS, (sockaddr*)&servSettings, sizeof(servSettings)) == SOCKET_ERROR)
             throw SetErrorMsgText("bind connect: ", WSAGetLastError());
         
@@ -156,7 +168,7 @@ int main()
                 throw SetErrorMsgText("select: ", WSAGetLastError());
             else if (selRes == 0)
             {
-                cout << "no client connected in 60s, waiting\n";
+                cout << "no client connected in 60s, not waiting anymore\n";
                 break;
             }
 

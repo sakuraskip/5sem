@@ -96,7 +96,7 @@ int main()
         servSettings.sin_family = AF_INET;
         servSettings.sin_port = htons(2000);
         
-        servSettings.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
+        servSettings.sin_addr.S_un.S_addr = inet_addr("10.208.126.41");
 
 
         if ((connect(sC, (sockaddr*)&servSettings, sizeof(servSettings))) == SOCKET_ERROR)
@@ -143,6 +143,7 @@ int main()
         }
         if ((lengthOutputBuffer = send(sC, "", 0, NULL)) == SOCKET_ERROR)
             throw SetErrorMsgText("send: ", WSAGetLastError());
+
         auto end = chrono::high_resolution_clock::now();
         auto duration = chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
         cout << "send time: " << duration << " ms\n";
