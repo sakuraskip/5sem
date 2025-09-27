@@ -8,8 +8,9 @@
 		struct HTHANDLE    // ���� ���������� HT
 		{
 			HTHANDLE();
-			HTHANDLE(int Capacity, int SecSnapshotInterval, int MaxKeyLength, int MaxPayloadLength, const char FileName[512]);
-			int     Capacity;               // ������� ��������� � ���������� ��������� 
+			HTHANDLE(int Capacity, int SecSnapshotInterval, int MaxKeyLength, int MaxPayloadLength, const char FileName[512],int elementCount);
+			int     Capacity;  
+			int		elementCount;             // ������� ��������� � ���������� ��������� 
 			int     SecSnapshotInterval;    // ������������� ���������� � ���. 
 			int     MaxKeyLength;           // ������������ ����� �����
 			int     MaxPayloadLength;       // ������������ ����� ������
@@ -39,7 +40,8 @@
 			int   SecSnapshotInterval,		   // ������������� ���������� � ���.
 			int   MaxKeyLength,                // ������������ ������ �����
 			int   MaxPayloadLength,            // ������������ ������ ������
-			const char  FileName[512]          // ��� ����� 
+			const char  FileName[512],
+			int elementCount          // ��� ����� 
 		); 	// != NULL �������� ����������  
 
 		HTHANDLE*   Open     //  ������� HT             
@@ -61,14 +63,14 @@
 		
 		BOOL Insert      // �������� ������� � ���������
 		(
-			const HTHANDLE* hthandle,            // ���������� HT
+			HTHANDLE* hthandle,            // ���������� HT
 			const Element*  element              // �������
 		);	//  == TRUE �������� ���������� 
 
 
 		BOOL Delete      // ������� ������� � ���������
 		(
-			const HTHANDLE* hthandle,            // ���������� HT (����)
+			HTHANDLE* hthandle,            // ���������� HT (����)
 			const Element*  element              // ������� 
 		);	//  == TRUE �������� ���������� 
 

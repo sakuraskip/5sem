@@ -1,4 +1,4 @@
-#include "lab1HT.h"
+﻿#include "Header.h"
 #include <Windows.h>
 #include <iostream>
 int main()
@@ -6,7 +6,7 @@ int main()
     HT::HTHANDLE* ht = nullptr;
     try
     {
-        ht = HT::Create(1000, 3, 10, 256, "D:\\HTspace.ht",0);  // создать HT-хранилище
+        ht = HT::Create(1000, 3, 10, 256, "test.ht", 0); 
         if (ht) std::cout << "-- Create: success";
         else throw " -- Create: error";
 
@@ -17,7 +17,7 @@ int main()
         if (hte) std::cout << "Get: success";
         else throw "-- Get: error";
 
-        HT::print(hte);
+        /* HT::print(hte);*/
 
         if (HT::Snap(ht)) std::cout << "Snap: success";
         else throw "-- Snap: error";
@@ -29,7 +29,7 @@ int main()
         if (hte1) std::cout << "Get: success";
         else throw "-- Get: error";
 
-        HT::print(hte1);
+        //HT::print(hte1);
 
         if (HT::Delete(ht, hte1)) std::cout << "Delete: success";
         else throw "-- Delete: error";
@@ -41,6 +41,6 @@ int main()
     catch (char* msg)
     {
         std::cout << msg << "\n";
-        if (ht != nullptr) std::cout << HT::GetLastError(ht);
+        //if (ht != nullptr) std::cout << HT::GetLastError(ht);
     }
 }
