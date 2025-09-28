@@ -40,7 +40,13 @@ int main()
         if (HT::Close(ht)) std::cout << "\nClose: success\n";
         else throw "\n-- Close: error";
 
+        if (HT::Open("test.ht")) std::cout << "\nOpen success\n";
+        else throw "\n open error";
 
+        hte1 = HT::Get(ht, new HT::Element("key223", 7));
+        if (hte1) std::cout << "\nGet: success\n";
+        else throw "-- Get: error\n";
+        HT::print(hte1);
 
     }
     catch (char* msg)
