@@ -24,6 +24,35 @@ namespace HT
         }
         return hash;
     }
+    bool WriteHeaderToFile(HTHANDLE* ht)
+    {
+        DWORD written;
+        if (!WriteFile(ht->File, &ht->Capacity, sizeof(ht->Capacity), &written, NULL) ||
+            !WriteFile(ht->File, &ht->SecSnapshotInterval, sizeof(ht->SecSnapshotInterval), &written, NULL) ||
+            !WriteFile(ht->File, &ht->MaxKeyLength, sizeof(ht->MaxKeyLength), &written, NULL) ||
+            !WriteFile(ht->File, &ht->MaxPayloadLength, sizeof(ht->MaxPayloadLength), &written, NULL) ||
+            !WriteFile(ht->File, &ht->elementCount, sizeof(ht->elementCount), &written, NULL))
+        {
+            cout << "\ncreate: failed to wwrite header\n";
+            return false;
+        }
+        return true;
+    }
+    bool ReadHeaderFromFile(HTHANDLE* ht)
+    {
+        DWORD read;
+        if (!ReadFile(ht->File, &ht->Capacity, sizeof(ht->Capacity), &read, NULL) ||
+            !ReadFile(ht->File, &ht->SecSnapshotInterval, sizeof(ht->SecSnapshotInterval), &read, NULL) ||
+            !ReadFile(ht->File, &ht->MaxKeyLength, sizeof(ht->MaxKeyLength), &read, NULL) ||
+            !ReadFile(ht->File, &ht->MaxPayloadLength, sizeof(ht->MaxPayloadLength), &read, NULL) ||
+            !ReadFile(ht->File, &ht->elementCount, sizeof(ht->elementCount), &read, NULL))
+        {
+            cout << "\nopen: failed to read header\n";
+            return false;
+        }
+        return true;
+    }
+
     std::mutex mutex1;
     HTHANDLE::HTHANDLE() :
         Capacity(0),
@@ -33,7 +62,9 @@ namespace HT
         File(NULL),
         FileMapping(NULL),
         Addr(NULL),
-        lastsnaptime(0)
+        lastsnaptime(0),
+        elementCount(0),
+        DataAddr(NULL)
     {
 
     }
@@ -76,20 +107,28 @@ namespace HT
 
 
         ht->File = CreateFileA(FileName, GENERIC_READ | GENERIC_WRITE,
-            0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+            FILE_SHARE_READ| FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
         if (ht->File == INVALID_HANDLE_VALUE)
         {
             cout << "Create: file creation failed. " << "\n";
             delete ht;
             return NULL;
         }
+
         cout << "Create: file created" << "\n";
 
-        int elementSize = ht->MaxKeyLength + ht->MaxPayloadLength;
-        int dwMaxSizeLow = elementSize * ht->Capacity;
+        if (!WriteHeaderToFile(ht))
+        {
+            CloseHandle(ht->File);
+            delete ht;
+            return 0;
+        }
+
+        int elementSize = 1 + ht->MaxKeyLength + ht->MaxPayloadLength;
+        int dwMaxSizeLow = elementSize * ht->Capacity + 20;// не забыть про размер заголовка
 
         ht->FileMapping = CreateFileMappingA(ht->File, NULL,
-            PAGE_READWRITE, 0, dwMaxSizeLow, "htFileMapping");
+            PAGE_READWRITE, 0, dwMaxSizeLow, NULL);
 
         if (ht->FileMapping == NULL || ht->FileMapping == INVALID_HANDLE_VALUE)
         {
@@ -106,47 +145,59 @@ namespace HT
             delete ht;
             return NULL;
         }
+        ht->DataAddr = (BYTE*)ht->Addr + 20;// здесь тоже б не забыть
         return ht;
     }
     HTHANDLE* Open(const char FileName[512])
     {
-        lock_guard<mutex>lock(mutex1);
+        std::lock_guard<std::mutex> lock(mutex1);
 
         HTHANDLE* ht = new HTHANDLE();
 
         ht->File = CreateFileA(FileName, GENERIC_READ | GENERIC_WRITE,
-            0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+            FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
         if (ht->File == INVALID_HANDLE_VALUE)
         {
-            cout << "Open: file creation failed. " << "\n";
+            std::cout << "Open: file open failed.\n";
             delete ht;
-            return NULL;
+            return nullptr;
         }
-        cout << "Open: file created" << "\n";
+        std::cout << "Open: file opened\n";
 
-        int elementSize = ht->MaxKeyLength + ht->MaxPayloadLength;
-        int dwMaxSizeLow = elementSize * ht->Capacity;
+        if (!ReadHeaderFromFile(ht))
+        {
+            CloseHandle(ht->File);
+            delete ht;
+            return nullptr;
+        }
+
+        int elementSize = 1 + ht->MaxKeyLength + ht->MaxPayloadLength;
+        int dwMaxSizeLow = elementSize * ht->Capacity + 20; // не забыть размер заголовка (20)
 
         ht->FileMapping = CreateFileMappingA(ht->File, NULL,
-            PAGE_READWRITE, 0, dwMaxSizeLow, "htFileMapping");
+            PAGE_READWRITE, 0, dwMaxSizeLow, NULL);
 
         if (ht->FileMapping == NULL || ht->FileMapping == INVALID_HANDLE_VALUE)
         {
-            cout << "Open: FileMapping error " << "\n";
+            std::cout << "Open: FileMapping error\n";
+            CloseHandle(ht->File);
             delete ht;
-            return NULL;
+            return nullptr;
         }
 
         ht->Addr = MapViewOfFile(ht->FileMapping, FILE_MAP_ALL_ACCESS, 0, 0, 0);
 
-        if (ht->Addr == NULL || ht->Addr == INVALID_HANDLE_VALUE)
+        if (ht->Addr == NULL)
         {
-            cout << "Open: MapViewOfFile error " << "\n";
+            std::cout << "Open: MapViewOfFile error\n";
+            CloseHandle(ht->FileMapping);
+            CloseHandle(ht->File);
             delete ht;
-            return NULL;
+            return nullptr;
         }
-        return ht;
 
+        ht->DataAddr = (BYTE*)ht->Addr + 20; // не забыть размер заголовка(20)
+        return ht;
     }
     BOOL Snap(HTHANDLE* hthandle)
     {
@@ -186,9 +237,9 @@ namespace HT
             return FALSE;
         }
 
-        int slotSize = hthandle->MaxKeyLength + hthandle->MaxPayloadLength;
+        int slotSize = 1 + hthandle->MaxKeyLength + hthandle->MaxPayloadLength;
 
-        int totalSize = hthandle->Capacity * slotSize;
+        int totalSize = hthandle->Capacity * slotSize + 5 * sizeof(int);
 
         DWORD writtenBytesAmount = 0;
         BOOL writeResult = WriteFile(
@@ -229,7 +280,6 @@ namespace HT
             }
             hthandle->Addr = NULL;
         }
-
         if (hthandle->FileMapping != NULL && hthandle->FileMapping != INVALID_HANDLE_VALUE)
         {
             if (CloseHandle(hthandle->FileMapping) == false)
@@ -253,7 +303,8 @@ namespace HT
 
     BOOL Insert(HTHANDLE* hthandle, const Element* element)
     {
-        if (!hthandle || !element || !hthandle->Addr)
+        bool inserted = false;
+        if (!hthandle || !element || !hthandle->DataAddr)
         {
             cout << "\nInsert: Invalid parameters";
             return FALSE;
@@ -269,63 +320,71 @@ namespace HT
             return FALSE;
         }
 
-        std::lock_guard<std::mutex> lock(mutex1);
-
-        if (hthandle->elementCount >= hthandle->Capacity)
         {
-            cout << "\nInsert: HashTable full";
-            return FALSE;
-        }
+            std::lock_guard<std::mutex> lock(mutex1);
 
-        int slotSize = 1 + hthandle->MaxKeyLength + hthandle->MaxPayloadLength;
-        BYTE* base = (BYTE*)hthandle->Addr;
-
-        unsigned int hash = HashFunction(element->key, element->keylength);
-        int capacity = hthandle->Capacity;
-
-        for (int i = 0; i < capacity; i++)
-        {
-            int index = (hash + i) % capacity;
-            BYTE* slot = base + index * slotSize;
-
-            BYTE& isUsed = slot[0];
-            BYTE* keyPtr = slot + 1;
-            BYTE* payloadPtr = slot + 1 + hthandle->MaxKeyLength;
-
-            if (isUsed == 0)
+            if (hthandle->elementCount >= hthandle->Capacity)
             {
-                isUsed = 1;
-                memset(keyPtr, 0, hthandle->MaxKeyLength);
-                memcpy(keyPtr, element->key, element->keylength);
-
-                memset(payloadPtr, 0, hthandle->MaxPayloadLength);
-                if (element->payloadlength > 0 && element->payload != nullptr)
-                    memcpy(payloadPtr, element->payload, element->payloadlength);
-
-                hthandle->elementCount++;
-                cout << "\nInsert: success at index " << index;
-                return TRUE;
+                cout << "\nInsert: HashTable full";
+                return FALSE;
             }
-            else
+
+            int slotSize = 1 + hthandle->MaxKeyLength + hthandle->MaxPayloadLength;
+            BYTE* tablestart = (BYTE*)hthandle->DataAddr;
+
+            unsigned int hash = HashFunction(element->key, element->keylength);
+            int capacity = hthandle->Capacity;
+
+            for (int i = 0; i < capacity; i++)
             {
-                if (memcmp(keyPtr, element->key, element->keylength) == 0)
+                int idx = (hash + i) % capacity;
+                BYTE* slot = tablestart + idx * slotSize;
+
+                BYTE& isSlotUsedFlag = slot[0];
+                BYTE* keyStart = slot + 1;
+                BYTE* payloadPtr = slot + 1 + hthandle->MaxKeyLength;
+
+                if (isSlotUsedFlag == 0)
                 {
+                    isSlotUsedFlag = 1;
+                    memset(keyStart, 0, hthandle->MaxKeyLength);
+                    memcpy(keyStart, element->key, element->keylength);
+
                     memset(payloadPtr, 0, hthandle->MaxPayloadLength);
                     if (element->payloadlength > 0 && element->payload != nullptr)
                         memcpy(payloadPtr, element->payload, element->payloadlength);
 
-                    cout << "\nInsert: key exists, payload updated at index " << index;
-                    return TRUE;
+                    hthandle->elementCount++;
+                    cout << "\nInsert: success at index " << idx;
+                    inserted = true;
+                    break;
+                }
+                else
+                {
+                    if (memcmp(keyStart, element->key, element->keylength) == 0)
+                    {
+                        memset(payloadPtr, 0, hthandle->MaxPayloadLength);
+                        if (element->payloadlength > 0 && element->payload != nullptr)
+                            memcpy(payloadPtr, element->payload, element->payloadlength);
+
+                        cout << "\nInsert: key exists, payload updated at index " << idx;
+                        inserted = true;
+                        break;
+                    }
                 }
             }
         }
-
+        if (inserted)
+        {
+            Snap(hthandle);
+            return TRUE;
+        }
         cout << "\nInsert: no free slot found";
         return FALSE;
     }
     BOOL Delete(HTHANDLE* hthandle, const Element* element)
     {
-        if (!hthandle || !element || !hthandle->Addr)
+        if (!hthandle || !element || !hthandle->DataAddr)
         {
             cout << "\nDelete: Invalid parameters";
             return FALSE;
@@ -336,42 +395,54 @@ namespace HT
             return FALSE;
         }
 
-        std::lock_guard<std::mutex> lock(mutex1);
 
-        int slotSize = 1 + hthandle->MaxKeyLength + hthandle->MaxPayloadLength;
-        BYTE* base = (BYTE*)hthandle->Addr;
-
-        unsigned int hash = HashFunction(element->key, element->keylength);
-        int capacity = hthandle->Capacity;
-
-        for (int i = 0; i < capacity; i++)
+        bool inserted = false;
         {
-            int index = (hash + i) % capacity;
-            BYTE* slot = base + index * slotSize;
+            std::lock_guard<std::mutex> lock(mutex1);
+            int slotSize = 1 + hthandle->MaxKeyLength + hthandle->MaxPayloadLength;
+            BYTE* base = (BYTE*)hthandle->DataAddr;
 
-            BYTE& isUsed = slot[0];
-            BYTE* keyPtr = slot + 1;
+            unsigned int hash = HashFunction(element->key, element->keylength);
+            int capacity = hthandle->Capacity;
 
-            if (isUsed == 0)
-                return FALSE;
-
-            if (memcmp(keyPtr, element->key, element->keylength) == 0)
+            for (int i = 0; i < capacity; i++)
             {
-                isUsed = 0;
-                memset(keyPtr, 0, hthandle->MaxKeyLength);
-                memset(slot + 1 + hthandle->MaxKeyLength, 0, hthandle->MaxPayloadLength);
+                int idx = (hash + i) % capacity;
+                BYTE* slot = base + idx * slotSize;
 
-                hthandle->elementCount--;
-                cout << "\nDelete: success at index " << index;
-                return TRUE;
+                BYTE& isUsed = slot[0];
+                BYTE* keyPtr = slot + 1;
+
+                if (isUsed == 0)
+                {
+                    inserted = false;
+                    break;
+                }
+
+                if (memcmp(keyPtr, element->key, element->keylength) == 0)
+                {
+                    isUsed = 0;
+                    memset(keyPtr, 0, hthandle->MaxKeyLength);
+                    memset(slot + 1 + hthandle->MaxKeyLength, 0, hthandle->MaxPayloadLength);
+
+                    hthandle->elementCount--;
+                    cout << "\nDelete: success at index " << idx;
+                    inserted = true;
+                    break;
+                }
             }
+        }
+        if (inserted)
+        {
+            Snap(hthandle);
+            return TRUE;
         }
 
         return FALSE;
     }
     Element* Get(HTHANDLE* hthandle, const Element* element)
     {
-        if (!hthandle || !element || !hthandle->Addr)
+        if (!hthandle || !element || !hthandle->DataAddr)
         {
             cout << "\nGet: Invalid parameters";
             return nullptr;
@@ -385,15 +456,15 @@ namespace HT
         std::lock_guard<std::mutex> lock(mutex1);
 
         int slotSize = 1 + hthandle->MaxKeyLength + hthandle->MaxPayloadLength;
-        BYTE* base = (BYTE*)hthandle->Addr;
+        BYTE* dataStart = (BYTE*)hthandle->DataAddr;
 
         unsigned int hash = HashFunction(element->key, element->keylength);
         int capacity = hthandle->Capacity;
 
         for (int i = 0; i < capacity; i++)
         {
-            int index = (hash + i) % capacity;
-            BYTE* slot = base + index * slotSize;
+            int idx = (hash + i) % capacity;
+            BYTE* slot = dataStart + idx * slotSize;
 
             BYTE& isUsed = slot[0];
             BYTE* keyPtr = slot + 1;
@@ -418,7 +489,7 @@ namespace HT
     }
     BOOL Update(HTHANDLE* hthandle, const Element* oldelement, const void* newpayload, int newpayloadlength)
     {
-        if (!hthandle || !oldelement || !hthandle->Addr)
+        if (!hthandle || !oldelement || !hthandle->DataAddr)
         {
             cout << "\nUpdate: Invalid parameters";
             return FALSE;
@@ -439,37 +510,55 @@ namespace HT
             return FALSE;
         }
 
-        std::lock_guard<std::mutex> lock(mutex1);
-
-        int slotSize = 1 + hthandle->MaxKeyLength + hthandle->MaxPayloadLength;
-        BYTE* base = (BYTE*)hthandle->Addr;
-
-        unsigned int hash = HashFunction(oldelement->key, oldelement->keylength);
-        int capacity = hthandle->Capacity;
-
-        for (int i = 0; i < capacity; i++)
+        bool inserted = false;
         {
-            int index = (hash + i) % capacity;
-            BYTE* slot = base + index * slotSize;
+            std::lock_guard<std::mutex> lock(mutex1);
 
-            BYTE& isUsed = slot[0];
-            BYTE* keyPtr = slot + 1;
-            BYTE* payloadPtr = slot + 1 + hthandle->MaxKeyLength;
+            int slotSize = 1 + hthandle->MaxKeyLength + hthandle->MaxPayloadLength;
+            BYTE* base = (BYTE*)hthandle->DataAddr;
 
-            if (isUsed == 0)
-                return FALSE;
+            unsigned int hash = HashFunction(oldelement->key, oldelement->keylength);
+            int capacity = hthandle->Capacity;
 
-            if (memcmp(keyPtr, oldelement->key, oldelement->keylength) == 0)
+            for (int i = 0; i < capacity; i++)
             {
-                memset(payloadPtr, 0, hthandle->MaxPayloadLength);
-                if (newpayloadlength > 0 && newpayload != nullptr)
-                    memcpy(payloadPtr, newpayload, newpayloadlength);
+                int idx = (hash + i) % capacity;
+                BYTE* slot = base + idx * slotSize;
 
-                cout << "\nUpdate: success at index " << index;
-                return TRUE;
+                BYTE& isUsed = slot[0];
+                BYTE* keyPtr = slot + 1;
+                BYTE* payloadPtr = slot + 1 + hthandle->MaxKeyLength;
+
+                if (isUsed == 0)
+                {
+                    inserted = false;
+                    break;
+                }
+
+                if (memcmp(keyPtr, oldelement->key, oldelement->keylength) == 0)
+                {
+                    memset(payloadPtr, 0, hthandle->MaxPayloadLength);
+                    if (newpayloadlength > 0 && newpayload != nullptr)
+                        memcpy(payloadPtr, newpayload, newpayloadlength);
+
+                    cout << "\nUpdate: success at index " << idx;
+                    inserted = true;
+                    break;
+                }
             }
+        }
+        if (inserted)
+        {
+            Snap(hthandle);
+            return TRUE;
         }
 
         return FALSE;
+    }
+    void print(const Element* element)
+    {
+        cout << "----------------------------ELEMENT--------------------------" << endl;
+        cout << "\nelement key: " << (char*)element->key << "\nelement payload: " << (char*)element->payload << endl;
+        cout << "----------------------------GG--------------------------" << endl;
     }
 }

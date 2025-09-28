@@ -20,7 +20,8 @@ namespace HT    // HT API
 		HANDLE  FileMapping;            // Mapping File HANDLE != 0, ���� mapping ������  
 		LPVOID  Addr;                   // Addr != NULL, ���� mapview ��������  
 		char    LastErrorMessage[512];  // ��������� �� ��������� ������ ��� 0x00  
-		time_t  lastsnaptime;           // ���� ���������� snap'a (time())  
+		time_t  lastsnaptime;           // ���� ���������� snap'a (time()) 
+		BYTE* DataAddr;
 	};
 
 	struct Element   // ������� 
