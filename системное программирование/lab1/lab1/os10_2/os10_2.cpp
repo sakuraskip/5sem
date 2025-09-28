@@ -6,7 +6,7 @@ int main()
     HT::HTHANDLE* ht = nullptr;
     try
     {
-        ht = HT::Create(1000, 3, 10, 256, "test.ht", 0); 
+        ht = HT::Create(1000, 3, 10, 256, "test2.ht", 0); 
         if (ht) std::cout << "-- Create: success";
         else throw " -- Create: error";
 
