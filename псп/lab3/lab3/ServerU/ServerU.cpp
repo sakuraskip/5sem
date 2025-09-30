@@ -88,20 +88,41 @@ int main()
 
         cout << servSettings.sin_port << endl;
 
+
+
         if (bind(sS, (sockaddr*)&servSettings, sizeof(servSettings)) == SOCKET_ERROR)
-            throw SetErrorMsgText("bind connect: ", WSAGetLastError());
+            throw SetErrorMsgText("bind: ", WSAGetLastError());
 
-        sockaddr_in clientSocket;
-        memset(&clientSocket, 0, sizeof(clientSocket));
-
-        int lClient = sizeof(clientSocket);
+        string buff;
         char inputBuffer[50];
-        int lengthBuffer = 0;
+        int inputLength = 0;
+        char outputBuffer[50] = "hello from serverU\n";
+        int outputLength = 0;
+        int messageCount = 0;
+        while(true)
+        {
+            sockaddr_in clientSocket;
+            memset(&clientSocket, 0, sizeof(clientSocket));
 
-        if (lengthBuffer = recvfrom(sS, inputBuffer, sizeof(inputBuffer), NULL, (sockaddr*)&clientSocket, &lClient) == SOCKET_ERROR)
-            throw SetErrorMsgText("recvfrom : ", WSAGetLastError());
+            int lClient = sizeof(clientSocket);
+           
 
-        cout << inputBuffer << endl;
+            if ((inputLength = recvfrom(sS, inputBuffer, sizeof(inputBuffer)-1, NULL, (sockaddr*)&clientSocket, &lClient)) == SOCKET_ERROR)
+                throw SetErrorMsgText("recvfrom : ", WSAGetLastError());
+
+            cout << "client says: " << inputBuffer << endl;
+
+            if ((outputLength = sendto(sS, inputBuffer, sizeof(inputBuffer)-1, 0, (sockaddr*)&clientSocket, sizeof(servSettings))) == SOCKET_ERROR)
+                throw SetErrorMsgText("sendto : ", WSAGetLastError());
+
+            if ((inputLength = recvfrom(sS, inputBuffer, sizeof(inputBuffer)-1, NULL, (sockaddr*)&clientSocket, &lClient)) == SOCKET_ERROR)
+                throw SetErrorMsgText("recvfrom : ", WSAGetLastError());
+
+            cout << "client says again: " << inputBuffer << endl;
+
+            if ((outputLength = sendto(sS, inputBuffer, sizeof(inputBuffer)-1, 0, (sockaddr*)&clientSocket, sizeof(servSettings))) == SOCKET_ERROR)
+                throw SetErrorMsgText("sendto : ", WSAGetLastError());
+        }
 
         if (closesocket(sS) == SOCKET_ERROR)
             throw SetErrorMsgText("closesocket: ", WSAGetLastError());

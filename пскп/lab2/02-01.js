@@ -20,7 +20,7 @@ const server = http.createServer((request,response)=>
     if(request.url === '/api/name')
     {
       response.setHeader('Content-Type','text/plain; charset=utf-8')
-      response.end("ваша фамилия имя и отчество");
+      response.end("Shilov Aleksei");
     }
     if(request.url === '/xml')
     {
