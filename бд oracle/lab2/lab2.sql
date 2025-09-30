@@ -4,8 +4,8 @@ create table lab2table(
     num number)
     
 create view lab2view as
-select * from lab2table where id >2
-
+select * from lab2table where id >2 --task 10
+-------------------------------------------------
 create table lab2task11(
     id number primary key,
     text varchar(100)) tablespace SAV_QDATA

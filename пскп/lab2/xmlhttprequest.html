@@ -6,7 +6,7 @@
     <title>Document</title>
 </head>
 <body>
-    <div id="getresult"></div>
+    <div style="font-size: 35px;" id="getresult"></div>
     <script>
         const url = 'http://localhost:5000/api/name';
         var div = document.getElementById("getresult");
@@ -14,9 +14,10 @@
         xml.open('GET',url,true)
         xml.onreadystatechange = function() 
         {
-            if(xml.status === 200)
+            if(xml.status === 200 && xml.readyState === 4)
             {
                 div.innerText = xml.responseText;
+                
             }
         }
         xml.send();

@@ -93,16 +93,46 @@ int main()
         sockaddr_in servSettings;
         servSettings.sin_family = AF_INET;
         servSettings.sin_port = htons(2000);
-
-        servSettings.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
+        servSettings.sin_addr.S_un.S_addr = inet_addr("10.30.248.206");//записать реальный адрес сервера
+        int servSize = sizeof(servSettings);
 
         char inputBuffer[50];
-        char outputBuffer[50] = "hello from clientU\n";
+        char outputBuffer[50] = "hello from clientU:1\n";
         int lengthInputB = 0;
         int lengthOutputB = 0;
 
-        if ((lengthOutputB = sendto(sC, outputBuffer, strlen(outputBuffer) + 1, NULL, (sockaddr*)&servSettings, sizeof(servSettings))) == SOCKET_ERROR)
-            throw SetErrorMsgText("sendto : ", WSAGetLastError());
+        for (int i = 0; i < messageAmount; i++)
+        {
+            if ((lengthOutputB = sendto(sC, outputBuffer, strlen(outputBuffer) + 1, 0,(sockaddr*)&servSettings, sizeof(servSettings))) == SOCKET_ERROR)
+                throw SetErrorMsgText("sendto : ", WSAGetLastError());
+
+            if ((lengthInputB = recvfrom(sC, inputBuffer, sizeof(inputBuffer) - 1, 0,(sockaddr*)&servSettings, &servSize)) == SOCKET_ERROR)
+                throw SetErrorMsgText("recvfrom : ", WSAGetLastError());
+
+           
+            inputBuffer[lengthInputB] = '\0';
+
+            cout << "server says: " << inputBuffer << endl;
+
+            string receivedMessage = inputBuffer;
+            int pos = receivedMessage.find(':');
+            if (pos == string::npos)
+                cout << "no ':' found in message" << endl;
+
+            int number = 0;
+            try {
+                number = stoi(receivedMessage.substr(pos + 1));
+            }
+            catch (exception ex) {
+                number = 0;
+                cout << "PACKET LOST------------------------------------------------" << endl;
+            }
+            number++;
+
+            string messageToServer = receivedMessage.substr(0, pos) + ":" + to_string(number) + "\n";
+
+            strcpy(outputBuffer, messageToServer.c_str());
+        }
 
         //closing
         if (closesocket(sC) == SOCKET_ERROR)

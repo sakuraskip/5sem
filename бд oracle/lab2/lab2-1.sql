@@ -17,13 +17,14 @@ extent management local uniform size 256k;
 --
 select tablespace_name from dba_tablespaces;
 select * from dba_data_files;
+select  * from dba_temp_files;
 
 create role C##RL_SAVCORE;
 grant create session to C##RL_SAVCORE; 
 grant create table to C##RL_SAVCORE;
 grant create view to C##RL_SAVCORE;
-grant create procedure to C##RL_SAVCORE
---drop role C##RL_SAVCORE cascade;
+grant create procedure to C##RL_SAVCORE;
+--drop role C##RL_SAVCORE;
 
 select * from dba_roles where ROLE like 'C##RL_SAVCORE';
 select * from dba_sys_privs where GRANTEE like 'C##RL_SAVCORE';
@@ -37,8 +38,8 @@ SESSIONS_PER_USER 3
 PASSWORD_LOCK_TIME 1
 password_reuse_time 10
 connect_time 180
-idle_time 30
---
+idle_time 30;
+
 --drop profile C##PF_SAVCORE cascade;
 
 select * from dba_profiles;
@@ -50,10 +51,9 @@ default tablespace TS_SAV quota unlimited on TS_SAV
 temporary tablespace TS_SAV_temp
 profile C##PF_SAVCORE
 account unlock
-password expire
+password expire;
 --drop user C##SAVCORE cascade;
 
-select * from dba_users;
 
 grant C##RL_SAVCORE to C##SAVCORE;
 
@@ -64,11 +64,11 @@ autoextend on
 next 5m
 maxsize 20m
 offline
-extent management local
+extent management local;
 alter tablespace SAV_QDATA online;
 
 --drop tablespace SAV_QDATA including contents and datafiles;
 
 
-alter user C##SAVCORE quota 2m on SAV_QDATA
+alter user C##SAVCORE quota 2m on SAV_QDATA;
 

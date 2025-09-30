@@ -104,14 +104,14 @@ int main()
 
         char inputBuffer[50];
         char outputBuffer[50] = "hello from client\n";
-        string startMessage = "hello from client\n";
+        string startMessage = "hello from client\n";//зачем
         int lengthInputBuffer = 0;
         int lengthOutputBuffer = 0;
 
         auto start = chrono::high_resolution_clock::now();
         for(int i=0;i<messageAmount;i++)
         {
-            string messageWithNumber = startMessage.substr(0, startMessage.size() - 1)+'\n';
+            string messageWithNumber = startMessage.substr(0, startMessage.size() - 1)+'\n';//зачем???
             if ((lengthOutputBuffer = send(sC, messageWithNumber.c_str(), messageWithNumber.size(), NULL)) == SOCKET_ERROR)
                 throw SetErrorMsgText("send: ", WSAGetLastError());
 
@@ -121,7 +121,6 @@ int main()
             inputBuffer[lengthInputBuffer] = '\0';
             cout << "server says: " << inputBuffer << endl;
 
-            // editing message and sending again
             string receivedMessage = inputBuffer;
 
             int pos = receivedMessage.find(':');
@@ -147,7 +146,7 @@ int main()
         auto end = chrono::high_resolution_clock::now();
         auto duration = chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
         cout << "send time: " << duration << " ms\n";
-        // closing
+        //closing
         if (closesocket(sC) == SOCKET_ERROR)
             throw SetErrorMsgText("closesocket: ", WSAGetLastError());
 
