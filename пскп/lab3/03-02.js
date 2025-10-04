@@ -26,7 +26,6 @@ const server = http.createServer((request,response)=>
     let parsedUrl = url.parse(request.url,true);
     if(parsedUrl.pathname === '/fact')
     {
-        request.on('')
         let k = Number(parsedUrl.query.k);
         let fact = CalculateFactorial(k);
         let resultString = {k,fact};

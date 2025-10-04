@@ -8,6 +8,7 @@
 #include <ctime>
 #include <iomanip>
 #include <sstream>
+#define HEADERSIZE 20
 using namespace std;
 
 namespace HT
@@ -124,7 +125,7 @@ namespace HT
         }
 
         int elementSize = 1 + ht->MaxKeyLength + ht->MaxPayloadLength;
-        int dwMaxSizeLow = elementSize * ht->Capacity + 20;// не забыть про размер заголовка
+        int dwMaxSizeLow = elementSize * ht->Capacity + HEADERSIZE;
 
         ht->FileMapping = CreateFileMappingA(ht->File, NULL,
             PAGE_READWRITE, 0, dwMaxSizeLow, NULL);
@@ -144,7 +145,7 @@ namespace HT
             delete ht;
             return NULL;
         }
-        ht->DataAddr = (BYTE*)ht->Addr + 20;// здесь тоже б не забыть
+        ht->DataAddr = (BYTE*)ht->Addr + HEADERSIZE;
         return ht;
     }
     HTHANDLE* Open(const char FileName[512])
@@ -171,7 +172,7 @@ namespace HT
         }
 
         int elementSize = 1 + ht->MaxKeyLength + ht->MaxPayloadLength;
-        int dwMaxSizeLow = elementSize * ht->Capacity + 20; // не забыть размер заголовка (20)
+        int dwMaxSizeLow = elementSize * ht->Capacity + HEADERSIZE;
 
         ht->FileMapping = CreateFileMappingA(ht->File, NULL,
             PAGE_READWRITE, 0, dwMaxSizeLow, NULL);
@@ -195,7 +196,7 @@ namespace HT
             return nullptr;
         }
 
-        ht->DataAddr = (BYTE*)ht->Addr + 20; // не забыть размер заголовка(20)
+        ht->DataAddr = (BYTE*)ht->Addr + HEADERSIZE;
         return ht;
     }
     BOOL Snap(HTHANDLE* hthandle)
@@ -238,7 +239,7 @@ namespace HT
 
         int slotSize = 1 + hthandle->MaxKeyLength + hthandle->MaxPayloadLength;
 
-        int totalSize = hthandle->Capacity * slotSize + 5 * sizeof(int);
+        int totalSize = hthandle->Capacity * slotSize + HEADERSIZE;
 
         DWORD writtenBytesAmount = 0;
         BOOL writeResult = WriteFile(

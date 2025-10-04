@@ -54,13 +54,15 @@ int main()
         if (HT::Insert(ht1, new HT::Element("keyht1", 7, "data123", 8))) std::cout << "-- Insert ht1:success";
         else throw "-- insert:error";
 
+        hte = HT::Get(ht1, new HT::Element("keyht1", 7));
+        if (hte) std::cout << "Getht1: success";
+        else throw "-- Getht1: error";
+
         hte = HT::Get(ht, new HT::Element("key224", 7));
         if (hte) std::cout << "Get: success";
         else throw "-- Get: error";
 
-        hte = HT::Get(ht1, new HT::Element("keyht1", 7));
-        if (hte) std::cout << "Getht1: success";
-        else throw "-- Getht1: error";
+        
 
         if (HT::Close(ht)) std::cout << "Close: success";
         else throw "-- Close: error";

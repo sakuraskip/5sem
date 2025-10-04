@@ -78,7 +78,7 @@ int main()
     {
         if (WSAStartup(MAKEWORD(2, 0), &wsadata) != 0)
             throw SetErrorMsgText("Startup: ", WSAGetLastError());
-        if ((sS = socket(AF_INET, SOCK_DGRAM, NULL)) == INVALID_SOCKET)
+        if ((sS = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == INVALID_SOCKET)
             throw SetErrorMsgText("socket: ", WSAGetLastError());
 
         sockaddr_in servSettings;
@@ -111,7 +111,6 @@ int main()
                 throw SetErrorMsgText("recvfrom : ", WSAGetLastError());
 
             cout << "client says: " << inputBuffer << endl;
-
             if ((outputLength = sendto(sS, inputBuffer, sizeof(inputBuffer)-1, 0, (sockaddr*)&clientSocket, sizeof(servSettings))) == SOCKET_ERROR)
                 throw SetErrorMsgText("sendto : ", WSAGetLastError());
 

@@ -96,7 +96,7 @@ int main()
         servSettings.sin_family = AF_INET;
         servSettings.sin_port = htons(2000);
         
-        servSettings.sin_addr.S_un.S_addr = inet_addr("10.208.126.41");
+        servSettings.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
 
 
         if ((connect(sC, (sockaddr*)&servSettings, sizeof(servSettings))) == SOCKET_ERROR)

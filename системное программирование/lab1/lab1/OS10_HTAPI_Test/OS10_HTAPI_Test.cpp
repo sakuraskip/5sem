@@ -69,7 +69,7 @@ void TestFunctionDelete()
 	assert(deleted);
 
 	HT::Element* e2 = HT::Get(ht, new HT::Element("key123", 7));
-	assert(e2 == nullptr); 
+	assert(e2 == nullptr);
 	cout << "TestFunctionDelete: Pass\n";
 
 	HT::Close(ht);

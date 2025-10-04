@@ -87,13 +87,13 @@ int main()
         if (WSAStartup(MAKEWORD(2, 0), &wsadata) != 0)
             throw SetErrorMsgText("Startup: ", WSAGetLastError());
 
-        if ((sC = socket(AF_INET, SOCK_DGRAM, NULL)) == INVALID_SOCKET)
+        if ((sC = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == INVALID_SOCKET)
             throw SetErrorMsgText("socket: ", WSAGetLastError());
 
         sockaddr_in servSettings;
         servSettings.sin_family = AF_INET;
         servSettings.sin_port = htons(2000);
-        servSettings.sin_addr.S_un.S_addr = inet_addr("10.30.248.206");//записать реальный адрес сервера
+        servSettings.sin_addr.S_un.S_addr = inet_addr("10.30.248.135");//записать адрес сервера
         int servSize = sizeof(servSettings);
 
         char inputBuffer[50];
@@ -122,10 +122,10 @@ int main()
             int number = 0;
             try {
                 number = stoi(receivedMessage.substr(pos + 1));
+                //ACK NACK
             }
             catch (exception ex) {
                 number = 0;
-                cout << "PACKET LOST------------------------------------------------" << endl;
             }
             number++;
 
