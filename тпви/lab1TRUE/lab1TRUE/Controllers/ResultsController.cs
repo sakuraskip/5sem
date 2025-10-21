@@ -3,6 +3,11 @@ using BSTU.Results.Collection;
 using AuthenticateResults;
 using lab1TRUE.Models;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication.BearerToken;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using System.IdentityModel.Tokens.Jwt;
 namespace lab1TRUE.Controllers
 {
     [ApiController]
@@ -11,7 +16,7 @@ namespace lab1TRUE.Controllers
     {
         private BSTU.Results.Collection.Results _results;
         private Authenticate _authenticate;
-        public ResultsController(BSTU.Results.Collection.Results results,Authenticate authenticate)
+        public ResultsController(BSTU.Results.Collection.Results results, Authenticate authenticate)
         {
             _results = results;
             _authenticate = authenticate;
@@ -19,12 +24,12 @@ namespace lab1TRUE.Controllers
         [HttpPost("SignIn")]
         public async Task<ActionResult> SignIn([FromBody] UserProfile profile)
         {
-            if(string.IsNullOrEmpty(profile.Username) || string.IsNullOrEmpty(profile.Password))
+            if (string.IsNullOrEmpty(profile.Username) || string.IsNullOrEmpty(profile.Password))
             {
                 return BadRequest("username or password is empty");
             }
             var res = await _authenticate.SignInAsync(profile.Username, profile.Password);
-            if(!res.Succeeded)
+            if (!res.Succeeded)
             {
                 return NotFound();
             }
@@ -35,7 +40,8 @@ namespace lab1TRUE.Controllers
         public async Task<ActionResult> SignOut()
         {
             await _authenticate.SignOut();
-            return Ok("signed out");
+            var expToken = GenerateJWT();
+            return Ok(new { token = expToken });
         }
         [HttpGet]
         [Authorize(Roles = "READER")]
@@ -49,7 +55,7 @@ namespace lab1TRUE.Controllers
         public ActionResult GetResultById(int id)
         {
             string info = _results.GetOneResults(id);
-            if(info != string.Empty)
+            if (info != string.Empty)
             {
                 return Ok(new { id, info });
             }
@@ -59,10 +65,10 @@ namespace lab1TRUE.Controllers
         [Authorize(Roles = "writer")]
         public ActionResult AddNewResult([FromBody] string value)
         {
-            if(!string.IsNullOrEmpty(value))
+            if (!string.IsNullOrEmpty(value))
             {
                 var id = _results.AddOneResult(value);
-                return Created($"{id}",new { id, value });
+                return Created($"{id}", new { id, value });
             }
             return BadRequest();
         }
@@ -70,10 +76,10 @@ namespace lab1TRUE.Controllers
         [Authorize(Roles = "writer")]
         public ActionResult UpdateResults(int id, [FromBody] string value)
         {
-            if(!string.IsNullOrEmpty(value))
+            if (!string.IsNullOrEmpty(value))
             {
                 var flag = _results.UpdateOneResult(id, value);
-                if(flag == -1)
+                if (flag == -1)
                 {
                     return BadRequest($"id {id} does not exists");
                 }
@@ -85,11 +91,24 @@ namespace lab1TRUE.Controllers
         [Authorize(Roles = "writer")]
         public ActionResult DeleteResultById(int id)
         {
-            if(_results.DeleteOneResult(id)!=-1)
+            if (_results.DeleteOneResult(id) != -1)
             {
                 return NoContent();
             }
             return NotFound();
+        }
+        private string GenerateJWT()
+        {
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("16-chars-minimum-key-secret-super"));
+            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var token = new JwtSecurityToken(
+                issuer: "bstu ",
+                audience: "bstu",
+                claims: new Claim[] { },
+                expires: DateTime.UtcNow.AddSeconds(100),
+                signingCredentials: credentials);
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
 }
