@@ -28,17 +28,18 @@ int main(int argc, char** argv)
         cerr << "{to} parameter should be more than {from}" << endl;
         return 1;
     }
-    int totalNums = to - from;
+    int totalNums = to - from+1;
     int numsForOneProcess = totalNums/processAmount;
     int numsRemained = totalNums - (numsForOneProcess* processAmount);
 
-    PROCESS_INFORMATION pi[processAmount];
-    HANDLE handles[processAmount];
+    PROCESS_INFORMATION pi[processAmount]={};
+    HANDLE handles[processAmount]={};
+    HANDLE readPipes[10] ={};
 
     int newFrom = from;
     for(int i=0;i<processAmount;i++)
     {
-        int newTo = newFrom+numsForOneProcess;
+        int newTo = newFrom+numsForOneProcess-1;
         if(i == processAmount -1)
         {
             newTo +=numsRemained;
@@ -61,8 +62,8 @@ int main(int argc, char** argv)
             cerr << "sethandleinformation error " << endl;
             return 1;
         }
-        PROCESS_INFORMATION pi;
-        STARTUPINFO si;
+        PROCESS_INFORMATION localPI;
+        STARTUPINFOA si;
         ZeroMemory(&pi,sizeof(PROCESS_INFORMATION));
         ZeroMemory(&si,sizeof(STARTUPINFO));
 
@@ -70,8 +71,9 @@ int main(int argc, char** argv)
         si.hStdOutput = childWritePipe;
         si.hStdError = childWritePipe;
         si.dwFlags  |=STARTF_USESTDHANDLES;
+
         string prompt = "child.exe "+ to_string(newFrom) + " " + to_string(newTo);
-        if(!CreateProcess(NULL,(LPWSTR)prompt.c_str(),NULL,NULL,TRUE,0,NULL,NULL,&si,&pi))
+        if(!CreateProcessA(NULL,(LPSTR)prompt.c_str(),NULL,NULL,TRUE,0,NULL,NULL,&si,&localPI))
         {
             cerr << "create process error " << endl;
 
@@ -82,7 +84,36 @@ int main(int argc, char** argv)
         // CloseHandle(pi.hThread); 
         cout << "process " << i << " created" << endl;
         CloseHandle(childWritePipe);
+        pi[i] = localPI;
+        handles[i] = localPI.hProcess;
+        readPipes[i] = childReadPipe;
 
+        newFrom=newTo+1;
+    }
+    for(int j=0;j<processAmount;j++)
+    {
+        cout << "process " << j << " :" << endl;
+        DWORD dwRead;
+        CHAR chbuf[BUFSIZ];
+        HANDLE hReadPipe = readPipes[j];
+        BOOL bSuccess = FALSE;
+
+        for(;;)
+        {
+            bSuccess = ReadFile(hReadPipe,chbuf,BUFSIZ-1,&dwRead,NULL);
+            if(!bSuccess || dwRead ==0) break;
+            chbuf[dwRead] = '\0';
+            cout << chbuf;
+        }
+        cout << endl;
+        CloseHandle(hReadPipe);
+    }
+    WaitForMultipleObjects(processAmount,handles,TRUE,60000);
+    for(int i=0;i<processAmount;i++)
+    {
+        CloseHandle(pi[i].hProcess);
+        CloseHandle(pi[i].hThread);
+        cout << "closed process numba " << i << endl;
     }
 
    
