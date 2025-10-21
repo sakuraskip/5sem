@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>lab4</title>
+  
+</head>
+<body>
+  <h1></h1>
+
+  <label for="idInput">ID</label>
+  <input type="number" id="idInput" placeholder="id" />
+  <br>
+  <label for="nameInput">Name</label>
+  <input type="text" id="nameInput" placeholder="name" />
+  <br>
+  <label for="bdayInput">Bday</label>
+  <input type="text" id="bdayInput" placeholder="bday" />
+  <br>
+  <div>
+    <button id="getBtn">GET</button>
+    <button id="postBtn">POST</button>
+    <button id="putBtn">PUT</button>
+    <button id="deleteBtn">DELETE</button>
+  </div>
+
+  <h2>Response:</h2>
+  <pre id="responseOutput"></pre>
+
+  <script>
+  const idInput = document.getElementById('idInput');
+  const nameInput = document.getElementById('nameInput');
+  const bdayInput = document.getElementById('bdayInput');
+  const responseOutput = document.getElementById('responseOutput');
+
+  const baseUrl = '/api/db';
+
+  document.getElementById('getBtn').addEventListener('click', () => {
+    fetch(baseUrl, { method: 'GET' })
+      .then(res => res.json())
+      .then(data => {
+        responseOutput.textContent = JSON.stringify(data, null, 1);
+      })
+      
+  });
+
+  document.getElementById('postBtn').addEventListener('click', () => {
+    const id = parseInt(idInput.value);
+    const name = nameInput.value.trim();
+    const bday = bdayInput.value.trim();
+
+    const body = JSON.stringify({id, name, bday });
+
+    fetch(baseUrl, {
+      method: 'POST',
+      body: body
+    })
+      .then(res => res.json())
+      .then(data => {
+        responseOutput.textContent = JSON.stringify(data, null, 1);
+      })
+      .catch(err => {
+        responseOutput.textContent = 'POST Error: ' + err.message;
+      });
+  });
+
+  document.getElementById('putBtn').addEventListener('click', () => {
+    const id = parseInt(idInput.value);
+    const name = nameInput.value.trim();
+    const bday = bdayInput.value.trim();
+
+    const body = JSON.stringify({ id, name, bday });
+
+    fetch(baseUrl, {
+      method: 'PUT',
+      body: body
+    })
+      .then(res => res.json())
+      .then(data => {
+        responseOutput.textContent = JSON.stringify(data, null, 1);
+      })
+      .catch(err => {
+        responseOutput.textContent = 'PUT Error: ' + err.message;
+      });
+  });
+
+  document.getElementById('deleteBtn').addEventListener('click', () => {
+    const id = parseInt(idInput.value);
+
+    fetch(baseUrl + '?id=' + id, {
+      method: 'DELETE'
+    })
+      .then(res => res.json())
+      .then(data => {
+        responseOutput.textContent = JSON.stringify(data, null, 1);
+      })
+      .catch(err => {
+        responseOutput.textContent = 'DELETE Error: ' + err.message;
+      });
+  });
+</script>
+</body>
+</html>
