@@ -4,7 +4,9 @@
 #include <string.h>
 using namespace std;
 
-
+/*
+https://learn.microsoft.com/ru-ru/windows/win32/ProcThread/creating-a-child-process-with-redirected-input-and-output
+ helps a lot  */ 
 int main(int argc, char** argv)
 {
 
@@ -18,7 +20,7 @@ int main(int argc, char** argv)
     from = atoi(argv[2]);
     to = atoi(argv[3]);
 
-    if(processAmount <= 0)
+    if(processAmount <= 0) // keep the number less than 10
     {
         cerr << "processAmount is 0 or less" << endl;
         return 1;
@@ -79,9 +81,7 @@ int main(int argc, char** argv)
 
             return 1;
         }
-        // probably fine but idk, two places said different things
-        // CloseHandle(pi.hProcess);
-        // CloseHandle(pi.hThread); 
+       
         cout << "process " << i << " created" << endl;
         CloseHandle(childWritePipe);
         pi[i] = localPI;

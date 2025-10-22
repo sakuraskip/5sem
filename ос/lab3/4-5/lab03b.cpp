@@ -16,6 +16,9 @@ int main(int argc, char** argv)
         ZeroMemory( &si, sizeof(si) );
         si.cb = sizeof(si);
         ZeroMemory( &pi, sizeof(pi) );
+        ZeroMemory( &pi, sizeof(pi2) );
+        ZeroMemory( &pi, sizeof(pi3) );
+
 
         //reboot after adding global environment variable(probably will work idk)
         if(CreateProcessA("lab03.exe",NULL,NULL,NULL,FALSE,0,NULL,NULL,&si,&pi))
