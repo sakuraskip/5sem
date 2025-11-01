@@ -1,5 +1,0 @@
-cd .\lab4\
-node .\04-01.js
-cd ..
-npm install node
-npm install -g npm@11.6.2

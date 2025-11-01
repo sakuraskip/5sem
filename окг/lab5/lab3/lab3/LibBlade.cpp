@@ -2,317 +2,377 @@
 
 CRectD::CRectD(double l, double t, double r, double b)
 {
-	left = l;
-	top = t;
-	right = r;
-	bottom = b;
+    left = l;
+    top = t;
+    right = r;
+    bottom = b;
 }
+
 //------------------------------------------------------------------------------
 void CRectD::SetRectD(double l, double t, double r, double b)
 {
-	left = l;
-	top = t;
-	right = r;
-	bottom = b;
+    left = l;
+    top = t;
+    right = r;
+    bottom = b;
 }
 
 //------------------------------------------------------------------------------
 CSizeD CRectD::SizeD()
 {
-	CSizeD cz;
-	cz.cx = fabs(right - left);	// Ширина прямоугольной области
-	cz.cy = fabs(top - bottom);	// Высота прямоугольной области
-	return cz;
+    CSizeD cz;
+    cz.cx = fabs(right - left); // Вычисление ширины прямоугольника
+    cz.cy = fabs(top - bottom);  // Вычисление высоты прямоугольника
+    return cz;
 }
 
-//----------------------------------------------------------------------------
-
+//------------------------------------------------------------------------------
 CMatrix CreateTranslate2D(double dx, double dy)
-// Формирует матрицу для преобразования координат объекта при его смещении 
-// на dx по оси X и на dy по оси Y в фиксированной системе координат
-// --- ИЛИ ---
-// Формирует матрицу для преобразования координат объекта при смещении начала
-// системы координат на -dx оси X и на -dy по оси Y при фиксированном положении объекта 
+// Создание матрицы для трансляции (перемещения) на dx по оси X и dy по оси Y
 {
-	CMatrix TM(3, 3);
-	TM(0, 0) = 1; TM(0, 2) = dx;
-	TM(1, 1) = 1;  TM(1, 2) = dy;
-	TM(2, 2) = 1;
-	return TM;
+    CMatrix TM(3, 3);
+    TM(0, 0) = 1; TM(0, 2) = dx;
+    TM(1, 1) = 1; TM(1, 2) = dy;
+    TM(2, 2) = 1;
+    return TM;
 }
 
-//------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 CMatrix CreateRotate2D(double fi)
-// Формирует матрицу для преобразования координат объекта при его повороте
-// на угол fi (при fi>0 против часовой стрелки)в фиксированной системе координат
-// --- ИЛИ ---
-// Формирует матрицу для преобразования координат объекта при повороте начала
-// системы координат на угол -fi при фиксированном положении объекта 
-// fi - угол в градусах
+// Создание матрицы для вращения на угол fi (градусы)
+// Положительное fi означает вращение по часовой стрелке
 {
-	double fg = fmod(fi, 360.0);
-	double ff = (fg / 180.0) * pi; // Перевод в радианы
-	CMatrix RM(3, 3);
-	RM(0, 0) = cos(ff); RM(0, 1) = -sin(ff);
-	RM(1, 0) = sin(ff);  RM(1, 1) = cos(ff);
-	RM(2, 2) = 1;
-	return RM;
+    double fg = fmod(fi, 360.0);
+    double ff = (fg / 180.0) * pi; // Преобразование в радианы
+    CMatrix RM(3, 3);
+    RM(0, 0) = cos(ff); RM(0, 1) = -sin(ff);
+    RM(1, 0) = sin(ff); RM(1, 1) = cos(ff);
+    RM(2, 2) = 1;
+    return RM;
 }
 
-
 //------------------------------------------------------------------------------
-
 CMatrix SpaceToWindow(CRectD& RS, CRect& RW)
-// Возвращает матрицу пересчета координат из мировых в оконные
-// RS - область в мировых координатах - double
-// RW - область в оконных координатах - int
+// Преобразование пространства координат из реального в оконное
+// RS - прямоугольник в реальных координатах (double)
+// RW - прямоугольник в оконных координатах (int)
 {
-	CMatrix M(3, 3);
-	CSize sz = RW.Size();	 // Размер области в ОКНЕ
-	int dwx = sz.cx;	     // Ширина
-	int dwy = sz.cy;	     // Высота
-	CSizeD szd = RS.SizeD(); // Размер области в МИРОВЫХ координатах
+    CMatrix M(3, 3);
+    CSize sz = RW.Size();    // Размер окна
+    int dwx = sz.cx;         // Ширина
+    int dwy = sz.cy;         // Высота
+    CSizeD szd = RS.SizeD(); // Размер реального прямоугольника
 
-	double dsx = szd.cx;    // Ширина в мировых координатах
-	double dsy = szd.cy;    // Высота в мировых координатах
+    double dsx = szd.cx;     // Ширина реального прямоугольника
+    double dsy = szd.cy;     // Высота реального прямоугольника
 
-	double kx = (double)dwx / dsx;   // Масштаб по x
-	double ky = (double)dwy / dsy;   // Масштаб по y
+    double kx = (double)dwx / dsx;   // Коэффициент по x
+    double ky = (double)dwy / dsy;   // Коэффициент по y
 
-	M(0, 0) = kx;  M(0, 1) = 0;    M(0, 2) = (double)RW.left - kx * RS.left;
-	M(1, 0) = 0;   M(1, 1) = -ky;  M(1, 2) = (double)RW.bottom + ky * RS.bottom;
-	M(2, 0) = 0;   M(2, 1) = 0;    M(2, 2) = 1;
-	return M;
+    M(0, 0) = kx;  M(0, 1) = 0;    M(0, 2) = (double)RW.left - kx * RS.left;
+    M(1, 0) = 0;   M(1, 1) = -ky;  M(1, 2) = (double)RW.bottom + ky * RS.bottom;
+    M(2, 0) = 0;   M(2, 1) = 0;    M(2, 2) = 1;
+    return M;
 }
 
 //------------------------------------------------------------------------------
-
 void SetMyMode(CDC& dc, CRectD& RS, CRect& RW)
-// Устанавливает режим отображения MM_ANISOTROPIC и его параметры
-// dc - ссылка на класс CDC MFC
-// RS -  область в мировых координатах - int
-// RW -	 Область в оконных координатах - int  
+// Установка режима отображения с использованием MM_ANISOTROPIC
+// dc - контекст устройства CDC MFC
+// RS - прямоугольник в реальных координатах (int)
+// RW - прямоугольник в оконных координатах (int)
 {
-	double dsx = RS.right - RS.left;
-	double dsy = RS.top - RS.bottom;
-	double xsL = RS.left;
-	double ysL = RS.bottom;
+    double dsx = RS.right - RS.left;
+    double dsy = RS.top - RS.bottom;
+    double xsL = RS.left;
+    double ysL = RS.bottom;
 
-	int dwx = RW.right - RW.left;
-	int dwy = RW.bottom - RW.top;
-	int xwL = RW.left;
-	int ywH = RW.bottom;
+    int dwx = RW.right - RW.left;
+    int dwy = RW.bottom - RW.top;
+    int xwL = RW.left;
+    int ywH = RW.bottom;
 
-	dc.SetMapMode(MM_ANISOTROPIC);
-	dc.SetWindowExt((int)dsx, (int)dsy);
-	dc.SetViewportExt(dwx, -dwy);
-	dc.SetWindowOrg((int)xsL, (int)ysL);
-	dc.SetViewportOrg(xwL, ywH);
+    dc.SetMapMode(MM_ANISOTROPIC);
+    dc.SetWindowExt((int)dsx, (int)dsy);
+    dc.SetViewportExt(dwx, -dwy);
+    dc.SetWindowOrg((int)xsL, (int)ysL);
+    dc.SetViewportOrg(xwL, ywH);
 }
 
 CBlade::CBlade()
 {
-	double rS = 30;       //радиус лезвия
-	double RoE = 10 * rS;
-	double d = RoE;
-	RS.SetRectD(-d, d, d, -d);					// Область системы в мировых координатах
-	RW.SetRect(0, 0, 690, 640);					// Область в окне
-	MainPoint.SetRect(-rS, rS, rS, -rS);
-	FirstTop.SetRect(-5, 5, 5, -5);  //создаем лезвиЯ 
-	SecondTop.SetRect(-5, 5, 5, -5);
-	FirstBootom.SetRect(-5, 5, 5, -5);
-	SecondBootom.SetRect(-5, 5, 5, -5);
-	WayRotation.SetRect(-RoE, RoE, RoE, -RoE);	 //область вращения
-	fiSB = 215;
-	fiFB = 205;
-	fiST = 25;
-	fiFT = 35;//угол положение для FT
-	fiHSB = 5;
-	fiHFB = 355;
-	fiHST = 175;
-	fiHFT = 185;
-	wPoint = -8;
-	dt = 0.1;
-	FTCoords.RedimMatrix(3);
-	STCoords.RedimMatrix(3);
-	FBCoords.RedimMatrix(3);
-	SBCoords.RedimMatrix(3);
-	FTHCoords.RedimMatrix(3);
-	STHCoords.RedimMatrix(3);
-	FBHCoords.RedimMatrix(3);
-	SBHCoords.RedimMatrix(3);
+    double rS = 30; // Радиус солнечного диска
+    double RoE = 10 * rS; // Радиус орбиты
+    RS.SetRectD(-RoE, RoE, RoE, -RoE);
+    RW.SetRect(0, 0, 600, 600);
+    MainPoint.SetRect(-rS, rS, rS, -rS);
+
+    BlueCoords1.RedimMatrix(3);
+    BlueCoords2.RedimMatrix(3);
+    BlueCoords3.RedimMatrix(3);
+    BlueCoords4.RedimMatrix(3);
+
+    RedBrush.CreateSolidBrush(RGB(255, 0, 0));
+    BlueBrush.CreateSolidBrush(RGB(0, 0, 255));
+    SunBrush.CreateSolidBrush(RGB(0, 128, 0));
+
+    // Размер лопасти
+    double bladeSize = 5;
+    FirstTop.SetRect(-bladeSize, bladeSize, bladeSize, -bladeSize);
+    SecondTop.SetRect(-bladeSize, bladeSize, bladeSize, -bladeSize);
+    FirstBootom.SetRect(-bladeSize, bladeSize, bladeSize, -bladeSize);
+    SecondBootom.SetRect(-bladeSize, bladeSize, bladeSize, -bladeSize);
+    LeftBlade.SetRect(-bladeSize, bladeSize, bladeSize, -bladeSize);
+    RightBlade.SetRect(-bladeSize, bladeSize, bladeSize, -bladeSize);
+
+    EarthOrbit.SetRect(-RoE, RoE, RoE, -RoE);
+
+    // Углы вращения
+    fiFT = 35;   // Угол первой лопасти (вперед)
+    fiST = 25;   // Угол второй лопасти (вперед)
+    fiFB = 205;  // Угол первой лопасти (назад)
+    fiSB = 215;  // Угол второй лопасти (назад)
+    fiLeft = 180; // Угол левой лопасти
+    fiRight = 0;  // Угол правой лопасти
+
+    fiBlue1 = 5;    // Угол первой синей лопасти
+    fiBlue2 = -5;   // Угол второй синей лопасти
+    fiBlue3 = 175;  // Угол третьей синей лопасти
+    fiBlue4 = 185;  // Угол четвертой синей лопасти
+
+    wPoint = -10; // Скорость вращения
+    dt = 1;
+
+    // Инициализация координат
+    FTCoords.RedimMatrix(3);
+    STCoords.RedimMatrix(3);
+    FBCoords.RedimMatrix(3);
+    SBCoords.RedimMatrix(3);
+    LBCoords.RedimMatrix(3);
+    RBCoords.RedimMatrix(3);
 }
 
 void CBlade::SetNewCoords()
 {
+    double RoV = (EarthOrbit.right - EarthOrbit.left) / 2;
+    double ff = (fiFT / 90.0) * pi;
+    double x = RoV * cos(ff);
+    double y = RoV * sin(ff);
+    FTCoords(0) = x;
+    FTCoords(1) = y;
+    FTCoords(2) = 1;
+    fiFT += wPoint * dt;
+    CMatrix P = CreateRotate2D(fiFT);
+    FTCoords = P * FTCoords;
 
-	double RoV = (WayRotation.right - WayRotation.left) / 2;
-	double ff = (fiFT / 90.0) * pi;
-	double x = RoV * cos(ff);
-	double y = RoV * sin(ff);
-	FTCoords(0) = x;
-	FTCoords(1) = y;
-	FTCoords(2) = 1;
+    RoV = (EarthOrbit.right - EarthOrbit.left) / 2;
+    ff = (fiST / 90.0) * pi;
+    x = RoV * cos(ff);
+    y = RoV * sin(ff);
+    STCoords(0) = x;
+    STCoords(1) = y;
+    STCoords(2) = 1;
+    fiST += wPoint * dt;
+    P = CreateRotate2D(fiST);
+    STCoords = P * STCoords;
 
-	fiFT += wPoint * dt;
-	CMatrix P = CreateRotate2D(fiFT);
-	FTCoords = P * FTCoords;
+    RoV = (EarthOrbit.right - EarthOrbit.left) / 2;
+    ff = (fiFB / 90.0) * pi;
+    x = RoV * cos(ff);
+    y = RoV * sin(ff);
+    FBCoords(0) = x;
+    FBCoords(1) = y;
+    FBCoords(2) = 1;
+    fiFB += wPoint * dt;
+    P = CreateRotate2D(fiFB);
+    FBCoords = P * FBCoords;
 
-	RoV = (WayRotation.right - WayRotation.left) / 2;
-	ff = (fiST / 90.0) * pi;
-	x = RoV * cos(ff);
-	y = RoV * sin(ff);
-	STCoords(0) = x;
-	STCoords(1) = y;
-	STCoords(2) = 1;
+    RoV = (EarthOrbit.right - EarthOrbit.left) / 2;
+    ff = (fiSB / 90.0) * pi;
+    x = RoV * cos(ff);
+    y = RoV * sin(ff);
+    SBCoords(0) = x;
+    SBCoords(1) = y;
+    SBCoords(2) = 1;
+    fiSB += wPoint * dt;
+    P = CreateRotate2D(fiSB);
+    SBCoords = P * SBCoords;
 
-	fiST += wPoint * dt;
-	P = CreateRotate2D(fiST);
-	STCoords = P * STCoords;
+    // Обновление координат синих лопастей
+    ff = (fiBlue1 / 90.0) * pi;
+    BlueCoords1(0) = RoV * cos(ff);
+    BlueCoords1(1) = RoV * sin(ff);
+    BlueCoords1(2) = 1;
+    fiBlue1 += wPoint * dt;
+    P = CreateRotate2D(fiBlue1);
+    BlueCoords1 = P * BlueCoords1;
 
-	RoV = (WayRotation.right - WayRotation.left) / 2;
-	ff = (fiFB / 90.0) * pi;
-	x = RoV * cos(ff);
-	y = RoV * sin(ff);
-	FBCoords(0) = x;
-	FBCoords(1) = y;
-	FBCoords(2) = 1;
+    ff = (fiBlue2 / 90.0) * pi;
+    BlueCoords2(0) = RoV * cos(ff);
+    BlueCoords2(1) = RoV * sin(ff);
+    BlueCoords2(2) = 1;
+    fiBlue2 += wPoint * dt;
+    P = CreateRotate2D(fiBlue2);
+    BlueCoords2 = P * BlueCoords2;
 
-	fiFB += wPoint * dt;
-	P = CreateRotate2D(fiFB);
-	FBCoords = P * FBCoords;
+    ff = (fiBlue3 / 90.0) * pi;
+    BlueCoords3(0) = RoV * cos(ff);
+    BlueCoords3(1) = RoV * sin(ff);
+    BlueCoords3(2) = 1;
+    fiBlue3 += wPoint * dt;
+    P = CreateRotate2D(fiBlue3);
+    BlueCoords3 = P * BlueCoords3;
 
-	RoV = (WayRotation.right - WayRotation.left) / 2;
-	ff = (fiSB / 90.0) * pi;
-	x = RoV * cos(ff);
-	y = RoV * sin(ff);
-	SBCoords(0) = x;
-	SBCoords(1) = y;
-	SBCoords(2) = 1;
-
-	fiSB += wPoint * dt;
-	P = CreateRotate2D(fiSB);
-	SBCoords = P * SBCoords;
-
-	// для двух синих треугольников
-
-	double horizontalFF = (fiHFT / 90.0) * pi;
-	double horizontalX = RoV * cos(horizontalFF);
-	double horizontalY = RoV * sin(horizontalFF);
-	FTHCoords(0) = horizontalX;
-	FTHCoords(1) = horizontalY;
-	FTHCoords(2) = 1;
-
-	fiHFT += wPoint * dt;
-	CMatrix horizontalP = CreateRotate2D(fiHFT);
-	FTHCoords = horizontalP * FTHCoords;
-
-	double horizontalSF = (fiHST / 90.0) * pi;
-	horizontalX = RoV * cos(horizontalSF);
-	horizontalY = RoV * sin(horizontalSF);
-	STHCoords(0) = horizontalX;
-	STHCoords(1) = horizontalY;
-	STHCoords(2) = 1;
-
-	fiHST += wPoint * dt;
-	horizontalP = CreateRotate2D(fiHST);
-	STHCoords = horizontalP * STHCoords;
-
-	double horizontalBF = (fiHFB / 90.0) * pi;
-	horizontalX = RoV * cos(horizontalBF);
-	horizontalY = RoV * sin(horizontalBF);
-	FBHCoords(0) = horizontalX;
-	FBHCoords(1) = horizontalY;
-	FBHCoords(2) = 1;
-
-	fiHFB += wPoint * dt;
-	horizontalP = CreateRotate2D(fiHFB);
-	FBHCoords = horizontalP * FBHCoords;
-
-	double horizontalSBF = (fiHSB / 90.0) * pi;
-	horizontalX = RoV * cos(horizontalSBF);
-	horizontalY = RoV * sin(horizontalSBF);
-	SBHCoords(0) = horizontalX;
-	SBHCoords(1) = horizontalY;
-	SBHCoords(2) = 1;
-
-	fiHSB += wPoint * dt;
-	horizontalP = CreateRotate2D(fiHSB);
-	SBHCoords = horizontalP * SBHCoords;
+    ff = (fiBlue4 / 90.0) * pi;
+    BlueCoords4(0) = RoV * cos(ff);
+    BlueCoords4(1) = RoV * sin(ff);
+    BlueCoords4(2) = 1;
+    fiBlue4 += wPoint * dt;
+    P = CreateRotate2D(fiBlue4);
+    BlueCoords4 = P * BlueCoords4;
 }
-
 
 void CBlade::Draw(CDC& dc)
 {
-	CBrush SBrush, EBrush, MBrush, VBrush, * pOldBrush;
-	CRect R;
+    // Применение преобразования к координатам
+    CMatrix transformMatrix = SpaceToWindow(RS, RW);
 
-	SBrush.CreateSolidBrush(RGB(60, 117, 247)); //создаем кисти
-	EBrush.CreateSolidBrush(RGB(60, 117, 247));
-	MBrush.CreateSolidBrush(RGB(8, 168, 8));
-	VBrush.CreateSolidBrush(RGB(0, 128, 0));
+    // Установка пера для рисования
+    CPen blackPen(PS_SOLID, 1, RGB(0, 0, 0));
+    CPen* pOldPen = dc.SelectObject(&blackPen);
 
+    // Рисование треугольников
+    DrawTriangleWithBorder(FTCoords, STCoords, dc, RGB(255, 0, 0), transformMatrix);
+    DrawTriangleWithBorder(FBCoords, SBCoords, dc, RGB(255, 0, 0), transformMatrix);
+    DrawTriangleWithBorder(BlueCoords1, BlueCoords2, dc, RGB(0, 0, 255), transformMatrix);
+    DrawTriangleWithBorder(BlueCoords3, BlueCoords4, dc, RGB(0, 0, 255), transformMatrix);
 
-	dc.MoveTo(0, 0);                             //задаем начальную точку
-	dc.LineTo(FTCoords(0), FTCoords(1));
-	DrawTriangle(FTCoords, STCoords, dc, true);   //для рисования треугольников
-	DrawTriangle(FBCoords, SBCoords, dc, true);
-	DrawTriangle(FTHCoords, STHCoords, dc, false);
-	DrawTriangle(FBHCoords, SBHCoords, dc, false);
-	dc.SelectObject(&VBrush);              //рисуем эллипс
-	dc.Ellipse(MainPoint);
+    // Рисование солнечного диска
+    CBrush* pOldBrush = dc.SelectObject(&SunBrush);
+    dc.Ellipse(MainPoint);
+    dc.SelectObject(pOldBrush);
 
-	pOldBrush = dc.SelectObject(&SBrush);	// Цвет красный
-
-	dc.SelectObject(pOldBrush);				//Восстанавливаем кисть
+    // Восстановление пера
+    dc.SelectObject(pOldPen);
 }
-void CBlade::DrawTriangle(CMatrix FTCoords, CMatrix STCoords, CDC& dc, bool color)
+
+void CBlade::DrawTriangleWithBorder(CMatrix FCoords, CMatrix SCoords, CDC& dc, COLORREF fillColor, CMatrix& transformMatrix)
 {
+    // Преобразование координат треугольника
+    CMatrix p1 = transformMatrix * FCoords;
+    CMatrix p2 = transformMatrix * SCoords;
 
-	if (color) {                                 //определяем цвета лиинц и заливки треугольников
-		CPen Pen(PS_SOLID, 1, RGB(255, 0, 0));
-		dc.SelectObject(&Pen);
+    // Установка кисти и пера
+    CBrush brush(fillColor);
+    CPen blackPen(PS_SOLID, 1, RGB(0, 0, 0));
+    CPen* pOldPen = dc.SelectObject(&blackPen);
+    CBrush* pOldBrush = dc.SelectObject(&brush);
 
-		CBrush Brush(RGB(255, 0, 0));
-		dc.SelectObject(&Brush);
+    // Рисование треугольника
+    POINT points[3] = {
+        {0, 0},
+        {static_cast<int>(FCoords(0)), static_cast<int>(FCoords(1))},
+        {static_cast<int>(SCoords(0)), static_cast<int>(SCoords(1))}
+    };
+    dc.Polygon(points, 3);
 
-		CPoint points[3];                          //координаты вершин треугольников
-		points[0] = CPoint(0, 0);
-		points[1] = CPoint(FTCoords(0), FTCoords(1));
-		points[2] = CPoint(STCoords(0), STCoords(1));
-
-		dc.Polygon(points, 3);               //рисуем
-	}
-	else {
-		CPen Pen(PS_SOLID, 1, RGB(0, 0, 255));
-		dc.SelectObject(&Pen);
-
-		CBrush Brush(RGB(0, 0, 255));
-		dc.SelectObject(&Brush);
-
-		CPoint points[3];
-		points[0] = CPoint(0, 0);
-		points[1] = CPoint(FTCoords(0), FTCoords(1));
-		points[2] = CPoint(STCoords(0), STCoords(1));
-
-		dc.Polygon(points, 3);
-	}
-
+    // Восстановление кисти и пера
+    dc.SelectObject(pOldBrush);
+    dc.SelectObject(pOldPen);
 }
 
+void CBlade::DrawBladePair(CDC& dc, CMatrix& coords1, CMatrix& coords2, COLORREF color, CMatrix& transformMatrix)
+{
+    CRect R;
+    int d = 5; // Размер маркера
+
+    // Установка кисти и пера
+    CBrush brush(color);
+    CPen pen(PS_SOLID, 1, color);
+    CPen* pOldPen = dc.SelectObject(&pen);
+    CBrush* pOldBrush = dc.SelectObject(&brush);
+
+    // Рисование маркеров
+    R.SetRect(
+        static_cast<int>(coords1(0) - d),
+        static_cast<int>(coords1(1) + d),
+        static_cast<int>(coords1(0) + d),
+        static_cast<int>(coords1(1) - d)
+    );
+    dc.Ellipse(R);
+
+    R.SetRect(
+        static_cast<int>(coords2(0) - d),
+        static_cast<int>(coords2(1) + d),
+        static_cast<int>(coords2(0) + d),
+        static_cast<int>(coords2(1) - d)
+    );
+    dc.Ellipse(R);
+
+    // Рисование линий к маркерам
+    dc.MoveTo(0, 0);
+    dc.LineTo(static_cast<int>(coords1(0)), static_cast<int>(coords1(1)));
+    dc.MoveTo(0, 0);
+    dc.LineTo(static_cast<int>(coords2(0)), static_cast<int>(coords2(1)));
+
+    // Рисование треугольника
+    DrawTriangleWithBorder(coords1, coords2, dc, color, transformMatrix);
+
+    // Восстановление кисти и пера
+    dc.SelectObject(pOldBrush);
+    dc.SelectObject(pOldPen);
+}
+
+void CBlade::DrawBlade(CDC& dc, CMatrix& coords1, CMatrix& coords2, COLORREF color)
+{
+    // Установка кисти и пера
+    CBrush brush(color);
+    CPen pen(PS_SOLID, 1, color);
+    CPen* pOldPen = dc.SelectObject(&pen);
+    CBrush* pOldBrush = dc.SelectObject(&brush);
+
+    // Рисование лопастей
+    int bladeSize = 5;
+    CRect rect1(
+        static_cast<int>(coords1(0) - bladeSize),
+        static_cast<int>(coords1(1) + bladeSize),
+        static_cast<int>(coords1(0) + bladeSize),
+        static_cast<int>(coords1(1) - bladeSize)
+    );
+    dc.Ellipse(rect1);
+
+    CRect rect2(
+        static_cast<int>(coords2(0) - bladeSize),
+        static_cast<int>(coords2(1) + bladeSize),
+        static_cast<int>(coords2(0) + bladeSize),
+        static_cast<int>(coords2(1) - bladeSize)
+    );
+    dc.Ellipse(rect2);
+
+    // Рисование линий к лопастям
+    dc.MoveTo(0, 0);
+    dc.LineTo(static_cast<int>(coords1(0)), static_cast<int>(coords1(1)));
+    dc.MoveTo(0, 0);
+    dc.LineTo(static_cast<int>(coords2(0)), static_cast<int>(coords2(1)));
+
+    // Рисование треугольника
+    POINT triangle[3] = {
+        {0, 0},
+        {static_cast<int>(coords1(0)), static_cast<int>(coords1(1))},
+        {static_cast<int>(coords2(0)), static_cast<int>(coords2(1))}
+    };
+    dc.Polygon(triangle, 3);
+
+    // Восстановление кисти и пера
+    dc.SelectObject(pOldBrush);
+    dc.SelectObject(pOldPen);
+}
 
 void CBlade::GetRS(CRectD& RSX)
-// RS - структура, куда записываются параметры области графика
+// RS - Прямоугольник, который будет заполнен текущими координатами
 {
-	RSX.left = RS.left;
-	RSX.top = RS.top;
-	RSX.right = RS.right;
-	RSX.bottom = RS.bottom;
+    RSX.left = RS.left;
+    RSX.top = RS.top;
+    RSX.right = RS.right;
+    RSX.bottom = RS.bottom;
 }
-
-
-
-
-
-
-

@@ -1,4 +1,4 @@
-#ifndef LIBPLANETS
+п»ї#ifndef LIBPLANETS
 #define LIBPLANETS 1
 const double pi = 3.14159;
 
@@ -18,13 +18,13 @@ struct CRectD
 	CRectD() { left = top = right = bottom = 0; };
 	CRectD(double l, double t, double r, double b);
 	void SetRectD(double l, double t, double r, double b);
-	CSizeD SizeD();		// Возвращает размеры(ширина, высота) прямоугольника 
+	CSizeD SizeD();		// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ(пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅ) пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 
 };
 //-------------------------------------------------------------------------------
 
-CMatrix CreateTranslate2D(double dx, double dy); // матрица преобразования для двумерного смещения
-CMatrix CreateRotate2D(double fi); // матрица для двумерного поворота
-CMatrix SpaceToWindow(CRectD& rs, CRect& rw); //матрица преобразования  в оконные координаты
+CMatrix CreateTranslate2D(double dx, double dy);
+CMatrix CreateRotate2D(double fi);
+CMatrix SpaceToWindow(CRectD& rs, CRect& rw);
 void SetMyMode(CDC& dc, CRectD& RS, CRect& RW);
 
 
@@ -36,38 +36,52 @@ class CBlade
 	CRect SecondTop;
 	CRect FirstBootom;
 	CRect SecondBootom;
-	CRect WayRotation;
+	CRect EarthOrbit;
 	CMatrix FTCoords;
 	CMatrix STCoords;
 	CMatrix FBCoords;
 	CMatrix SBCoords;
-	CMatrix FTHCoords;
-	CMatrix STHCoords;
-	CMatrix FBHCoords;
-	CMatrix SBHCoords;
-	CRect RW;		   // Прямоугольник в окне
-	CRectD RS;		   // Прямоугольник области в МСК
-	double wPoint;		//угловая скорость
+	CRect RW;		   // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅ
+	CRectD RS;		   // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅ
+	double wPoint = 10;		//пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+	//пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ 4 пїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
 	double fiSB;
 	double fiFB;
 	double fiST;
 	double fiFT;
-	double fiHSB;
-	double fiHFB;
-	double fiHST;
-	double fiHFT;
 
-	double dt;		   // Интервал дискретизации, сек.
+	double dt;		   // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ.
 public:
 	CBlade();
-	void DrawTriangle(CMatrix FTCoords, CMatrix STCoords, CDC& dc, bool color);
-	void SetDT(double dtx) { dt = dtx; };	// Установка интервала дискретизации
-	void SetNewCoords();					// Вычисляет новые координаты планет
-	void GetRS(CRectD& RSX);				// Возвращает область графика в мировой СК
-	CRect GetRW() { return RW; };			// Возвращает область графика в окне	
-	void Draw(CDC& dc);						// Рисование без самостоятельного пересчета координат
+	//void DrawTriangle(CMatrix FTCoords, CMatrix STCoords, CDC& dc);
+	void SetDT(double dtx) { dt = dtx; };	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+	void SetNewCoords();					// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+	void GetRS(CRectD& RSX);				// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ
+	CRect GetRW() { return RW; };			// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅ	
+	void Draw(CDC& dc);						// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+	void DrawBladePair(CDC& dc, CMatrix& coords1, CMatrix& coords2, COLORREF color, CMatrix& transformMatrix);
+	void DrawTriangleWithBorder(CMatrix FCoords, CMatrix SCoords, CDC& dc, COLORREF color, CMatrix& transformMatrix);
+	void DrawBlade(CDC& dc, CMatrix& coords1, CMatrix& coords2, COLORREF color);
+
+private:
+	CBrush RedBrush;
+	CBrush BlueBrush;
+	CBrush SunBrush;
+	CMatrix BlueCoords1;  // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+	CMatrix BlueCoords2;  // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+	CMatrix BlueCoords3;  // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+	CMatrix BlueCoords4;  // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+	double fiLeft = 180;    // пїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅ)
+	double fiRight = 0;     // пїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅ)
+	double fiBlue1 = 0;     // пїЅпїЅпїЅпїЅпїЅпїЅ
+	double fiBlue2 = 180;   // пїЅпїЅпїЅпїЅпїЅ
+	double fiBlue3 = 90;    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
+	double fiBlue4 = 270;   // пїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
+	CRect LeftBlade;        // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+	CRect RightBlade;       // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+	CMatrix LBCoords;       // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+	CMatrix RBCoords;       // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 };
 
 
 #endif
-

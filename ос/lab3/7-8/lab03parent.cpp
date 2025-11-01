@@ -104,8 +104,10 @@ int main(int argc, char** argv)
             if(!bSuccess || dwRead ==0) break;
             chbuf[dwRead] = '\0';
             cout << chbuf;
+            
         }
         cout << endl;
+        system("pause");
         CloseHandle(hReadPipe);
     }
     WaitForMultipleObjects(processAmount,handles,TRUE,60000);

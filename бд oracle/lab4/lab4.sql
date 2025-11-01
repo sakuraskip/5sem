@@ -3,7 +3,7 @@ select * from dba_temp_files;
 
 --task2
 create tablespace SAV_QDATA 
-datafile 'qdata4.dbf'
+datafile 'qdata.dbf'
 size 10m
 offline;
 
@@ -31,7 +31,7 @@ insert into SAV_T1(id,text) values (1,'adasda');
 insert into SAV_T1(id,text) values (2,'sdgbg');
 insert into SAV_T1(id,text) values (3,'erewrw');
 select * from SAV_T1;
---task3
+--task3 from sys
 select * from dba_segments where tablespace_name = 'SAV_QDATA';
 select * from dba_segments where tablespace_name = 'SAV_QDATA'
 and segment_name = 'SAV_T1';
@@ -41,7 +41,7 @@ and not segment_name = 'SAV_T1';
 
 --task4
 drop table SAV_T1;-- connect as sav
-
+--connect as sys
 select * from dba_segments where tablespace_name = 'SAV_QDATA';
 select * from dba_segments where tablespace_name = 'SAV_QDATA'
 and segment_name = 'SAV_T1';
@@ -56,9 +56,10 @@ begin
     end loop;
     commit;
 end;
+select * from SAV_T1;
 --task7, connect as system
 select count(*) as extentCount, sum(blocks) as blocksCount,
-sum(bytes) as bytesCount from dba_extents where segment_name = 'SAV_T1';
+sum(bytes) as bytesCount from dba_segments where segment_name = 'SAV_T1';
 
 select * from dba_extents;
 --task8
@@ -70,7 +71,7 @@ select * from v$log where status='CURRENT';
 select * from v$logfile;
 --task11
 alter system switch logfile; --+task12
-select TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS') from dual; --19:48:31
+select TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS') from dual; --09:43:21
 --task12
 select group# from v$log;
 alter database add logfile group 5
@@ -80,11 +81,12 @@ alter database add logfile group 5
     'redo05_3.log'
 ) size 30m;
 
+
 select * from v$logfile where group#=5;
 select * from v$log order by sequence# desc;--scn
 
 --task13
-alter database drop logfile group 5; --execute shell script
+alter database drop logfile group 5; --execute shell script, after closing db execute again
 --task14+15
 archive log list;
 select * from v$archived_log;
@@ -101,7 +103,6 @@ select * from v$archived_log order by sequence# desc;
 
 select * from v$log order by sequence# desc;--redo journal
 select * from v$archived_log order by sequence# desc;--archive journal
-
 --task18
 shutdown immediate;--sqlplus
 startup mount;
@@ -132,15 +133,7 @@ drop user C##SAV cascade;
 
 
 
-
-
-
-
-
-
-
-
-
+select * from dba_recyclebin
 
 
 

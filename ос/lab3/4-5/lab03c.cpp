@@ -37,7 +37,6 @@ BOOL GetProcessList()
     _tprintf( TEXT("\nPROCESS NAME:  %s"), pe32.szExeFile );
     _tprintf( TEXT("\n-------------------------------------------------------" ));
 
-    // Retrieve the priority class.
     dwPriorityClass = 0;
     hProcess = OpenProcess( PROCESS_ALL_ACCESS, FALSE, pe32.th32ProcessID );
     if( hProcess == NULL )

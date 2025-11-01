@@ -11,5 +11,7 @@ int main(int argc, char** argv)
 
    cout << "text: " << title << endl;
    Sleep(5000);
+       system("pause");
+
     
 }

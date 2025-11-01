@@ -176,13 +176,14 @@ int main()
 
             if (strcmp(inputBuffer, callsign) == 0)
             {
-                if (strcmp(duplicateIP, localIP) == 0 || strcmp(duplicateIP,"26.89.194.121") ==0)
+                if (strcmp(duplicateIP, localIP) == 0 || strcmp(duplicateIP,"10.118.203.206") ==0)
                 {
+                    char IP[INET_ADDRSTRLEN];
+                    inet_ntop(AF_INET, &duplicateServer.sin_addr.S_un.S_addr, IP, sizeof(IP));
+                    cout << "duplicate server found\nIP: " << IP << endl;
                     break;
                 }
-                char IP[INET_ADDRSTRLEN];
-                inet_ntop(AF_INET, &duplicateServer.sin_addr.S_un.S_addr, IP, sizeof(IP));
-                cout << "duplicate server found\nIP: " << IP << endl;
+               
             }
             
             
