@@ -128,6 +128,7 @@ set<string> GetLocalIPs() {
                 char ip[INET_ADDRSTRLEN];
                 inet_ntop(AF_INET, host->h_addr_list[i], ip, INET_ADDRSTRLEN);
                 localIPs.insert(string(ip));
+               
             }
         }
     }
@@ -147,6 +148,12 @@ int main()
             throw SetErrorMsgText("Startup: ", WSAGetLastError());
         if ((sS = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == INVALID_SOCKET)
             throw SetErrorMsgText("socket: ", WSAGetLastError());
+
+        char sHostname[BUFSIZ] = "";
+        gethostname(sHostname, strlen(sHostname));
+            sHostname[BUFSIZ-1] = '\0';
+            cout << "\nserver hostname: " << sHostname << endl;
+            cout << "\nserver symbolic name: " << gethostbyname(sHostname)->h_name << endl;
 
         sockaddr_in servSettings;
         servSettings.sin_family = AF_INET;
@@ -217,7 +224,7 @@ int main()
 
         cout << "Found " << duplicateServers.size() << " duplicate server(s)" << endl;
 
-        timeWaiting.tv_sec = 0;  
+        timeWaiting.tv_sec = 0;
         timeWaiting.tv_usec = 0;
         setsockopt(sS, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeWaiting, sizeof(timeWaiting));
 
