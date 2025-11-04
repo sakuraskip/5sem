@@ -23,6 +23,7 @@ grant restricted session to C##LAB3ROLE;
 
 grant C##LAB3ROLE to C##SAV;
 --connect as SAV
+
 create table SAV_T1(
 id number primary key,
 text varchar(50)) TABLESPACE SAV_QDATA;

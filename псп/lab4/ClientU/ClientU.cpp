@@ -73,16 +73,18 @@ string SetErrorMsgText(string msgText, int errorCode)
     return msgText + GetErrorMsgText(errorCode);
 };
 
-bool GetServer(SOCKET* sock,char* call, struct sockaddr* from, int* flen)
+bool GetServer(SOCKET* sock, char* call, struct sockaddr* from, int* flen)
 {
     char inputBuffer[50] = "hello";
     int inputLength;
     int sendtoLength;
-    if ((sendtoLength = sendto(*sock, call, sizeof(call)-1 , NULL, from, *flen)) == SOCKET_ERROR)
-        throw SetErrorMsgText("GetServer sendto: " ,WSAGetLastError());
 
-    if ((inputLength = recvfrom(*sock, inputBuffer, sizeof(inputBuffer)-1, 0, from, flen)) ==
-        SOCKET_ERROR)
+    if ((sendtoLength = sendto(*sock, inputBuffer, strlen(inputBuffer), NULL, from, *flen)) == SOCKET_ERROR)
+        throw SetErrorMsgText("GetServer sendto: ", WSAGetLastError());
+
+    cout << "Sent to server: " << inputBuffer << " (length: " << strlen(inputBuffer) << ")" << endl;
+
+    if ((inputLength = recvfrom(*sock, inputBuffer, sizeof(inputBuffer) - 1, 0, from, flen)) == SOCKET_ERROR)
     {
         if (WSAGetLastError() == WSAETIMEDOUT)
         {
@@ -91,24 +93,29 @@ bool GetServer(SOCKET* sock,char* call, struct sockaddr* from, int* flen)
         }
         else throw SetErrorMsgText("GetServer recvfrom: ", WSAGetLastError());
     }
-    cout << "GetServer message: " << inputBuffer << endl;
+
+    inputBuffer[inputLength] = '\0';
+    cout << "GetServer received: " << inputBuffer << " (length: " << inputLength << ")" << endl;
+
     if (strcmp(inputBuffer, call) == 0)
     {
         return true;
     }
     return false;
-        
 }
+
 int main()
 {
     SOCKET sC;
     WSADATA wsadata;
     int messageAmount;
+
     do
     {
         cout << "message amount?: ";
         cin >> messageAmount;
     } while (messageAmount <= 0);
+
     try
     {
         if (WSAStartup(MAKEWORD(2, 0), &wsadata) != 0)
@@ -120,26 +127,21 @@ int main()
         sockaddr_in servSettings;
         servSettings.sin_family = AF_INET;
         servSettings.sin_port = htons(2000);
-        servSettings.sin_addr.S_un.S_addr = INADDR_BROADCAST;
+        servSettings.sin_addr.S_un.S_addr = inet_addr("192.168.100.255");
         int servSize = sizeof(servSettings);
-
-        char inputBuffer[50];
-        char outputBuffer[50] = "hello";
-        int lengthInputB = 0;
-        int lengthOutputB = 0;
 
         int optval = 1;
         if (setsockopt(sC, SOL_SOCKET, SO_BROADCAST, (char*)&optval, sizeof(optval)) == SOCKET_ERROR)
             throw SetErrorMsgText("setsockopt: ", WSAGetLastError());
 
-        if (GetServer(&sC, (char*)"hello", (sockaddr*)&servSettings, &servSize))
-            cout << "GetServer: success" << endl;
+
         for (int i = 0; i < messageAmount; i++)
         {
-           
+            cout << "Message " << (i + 1) << "/" << messageAmount << ":" << endl;
             if (GetServer(&sC, (char*)"hello", (sockaddr*)&servSettings, &servSize))
                 cout << "GetServer: success" << endl;
-
+            else
+                cout << "GetServer: fail" << endl;
         }
 
         //closing
@@ -147,7 +149,7 @@ int main()
             throw SetErrorMsgText("closesocket: ", WSAGetLastError());
 
         if (WSACleanup() == SOCKET_ERROR)
-            throw SetErrorMsgText("Cleaunp: ", WSAGetLastError());
+            throw SetErrorMsgText("Cleanup: ", WSAGetLastError());
     }
     catch (string msg)
     {

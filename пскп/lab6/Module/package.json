@@ -1,0 +1,14 @@
+{
+  "name": "m0603lxs",
+  "version": "1.5.8",
+  "description": "sending mails to myself via nodemailer",
+  "main": "m0603.js",
+  "dependencies": {
+    "nodemailer": "^6.9.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "rainzape",
+  "license": "ISC"
+}

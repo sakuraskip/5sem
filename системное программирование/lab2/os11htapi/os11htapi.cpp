@@ -93,7 +93,7 @@ namespace HT
     HANDLE globalMutex = NULL;
     bool InitMutex()
     {
-        globalMutex = CreateMutexA(NULL, FALSE, "Global\\ht_mutex");
+        globalMutex = CreateMutexA(NULL, FALSE, "ht_mutex");
         if (globalMutex == NULL)
         {
             return false;
@@ -225,8 +225,7 @@ namespace HT
         localtime_s(&local_tm, &now_c);
 
         std::ostringstream filenameStream;
-        filenameStream << "snapshot_";
-        filenameStream << std::put_time(&local_tm, "%Y-%m-%d_%H-%M-%S");
+        filenameStream << "snapshot_1";
         filenameStream << ".htSNAP";
         std::string filename = filenameStream.str();
 
@@ -389,7 +388,7 @@ namespace HT
         }
         if (inserted)
         {
-            Snap(hthandle);
+            //Snap(hthandle);
             ReleaseMutex(globalMutex);
             return TRUE;
         }
@@ -449,7 +448,7 @@ namespace HT
         }
         if (inserted)
         {
-            Snap(hthandle);
+            //Snap(hthandle);
             ReleaseMutex(globalMutex);
             return TRUE;
         }
@@ -500,7 +499,7 @@ namespace HT
 
                 BYTE* payloadCopy = new BYTE[hthandle->MaxPayloadLength];
                 memcpy(payloadCopy, payloadPtr, hthandle->MaxPayloadLength);
-
+                ReleaseMutex(globalMutex);
                 return new Element(keyCopy, element->keylength, payloadCopy, hthandle->MaxPayloadLength);
             }
         }
@@ -569,7 +568,7 @@ namespace HT
         }
         if (inserted)
         {
-            Snap(hthandle);
+            //Snap(hthandle);
             ReleaseMutex(globalMutex);
             return TRUE;
         }

@@ -7,6 +7,7 @@
 #include <tchar.h>
 #include <string>
 #include <chrono>
+#include <set>
 using namespace std;
 
 string GetErrorMsgText(int code)
@@ -73,16 +74,14 @@ string SetErrorMsgText(string msgText, int errorCode)
     return msgText + GetErrorMsgText(errorCode);
 };
 
-bool GetRequestFromClient(SOCKET* sock, char* uname, struct sockaddr* from, int* flen)
+bool GetRequestFromClient(SOCKET* sock, char* uname, struct sockaddr* from, int* flen, const set<string>& ignoreIPs)
 {
-    cout << "getRequestFromClient started" << endl;
     while (true)
     {
-        char inputBuffer[50] = "hello";
+        char inputBuffer[50];
         int inputLength;
 
-        if ((inputLength = recvfrom(*sock, inputBuffer, sizeof(inputBuffer)-1, 0, from, flen)) ==
-            SOCKET_ERROR)
+        if ((inputLength = recvfrom(*sock, inputBuffer, sizeof(inputBuffer) - 1, 0, from, flen)) == SOCKET_ERROR)
         {
             if (WSAGetLastError() == WSAETIMEDOUT)
             {
@@ -90,25 +89,59 @@ bool GetRequestFromClient(SOCKET* sock, char* uname, struct sockaddr* from, int*
             }
             else throw SetErrorMsgText("getRequestFromClient recvfrom: ", WSAGetLastError());
         }
-        cout << "GetRequestFromClient: " << inputBuffer << endl;
+
+        inputBuffer[inputLength] = '\0';
+
+        char fromIP[INET_ADDRSTRLEN];
+        inet_ntop(AF_INET, &((sockaddr_in*)from)->sin_addr, fromIP, INET_ADDRSTRLEN);
+
+        if (ignoreIPs.find(string(fromIP)) != ignoreIPs.end()) {
+            continue;
+        }
+
+        cout << "GetRequestFromClient from " << fromIP << ": " << inputBuffer << endl;
         if (strcmp(uname, inputBuffer) == 0)
             return true;
     }
 }
-bool PutAnswerToClient(SOCKET* sock,char* uname, struct sockaddr* to, int* lto)
+
+bool PutAnswerToClient(SOCKET* sock, char* uname, struct sockaddr* to, int* lto)
 {
     int lengthOutput;
     char outputBuffer[50] = "hello";
 
-    if ((lengthOutput = sendto(*sock, outputBuffer, sizeof(outputBuffer)-1, 0, to, *lto)) == SOCKET_ERROR)
+    if ((lengthOutput = sendto(*sock, outputBuffer, strlen(outputBuffer), 0, to, *lto)) == SOCKET_ERROR)
         throw SetErrorMsgText("PutAnswerToClient sendto: ", WSAGetLastError());
+
+    cout << "Sent client: " << outputBuffer << endl;
     return true;
+}
+
+set<string> GetLocalIPs() {
+    set<string> localIPs;
+    char hostname[256];
+
+    if (gethostname(hostname, sizeof(hostname)) == 0) {
+        struct hostent* host = gethostbyname(hostname);
+        if (host != NULL) {
+            for (int i = 0; host->h_addr_list[i] != NULL; i++) {
+                char ip[INET_ADDRSTRLEN];
+                inet_ntop(AF_INET, host->h_addr_list[i], ip, INET_ADDRSTRLEN);
+                localIPs.insert(string(ip));
+                cout << "Found local IP: " << ip << endl;
+            }
+        }
+    }
+    return localIPs;
 }
 
 int main()
 {
-    SOCKET sS;// сокет сервер
+    SOCKET sS;
     WSADATA wsadata;
+    set<string> duplicateServers;
+    set<string> localIPs;
+
     try
     {
         if (WSAStartup(MAKEWORD(2, 0), &wsadata) != 0)
@@ -121,36 +154,32 @@ int main()
         servSettings.sin_port = htons(2000);
         servSettings.sin_addr.S_un.S_addr = INADDR_ANY;
 
-        cout << servSettings.sin_port << endl;
-
-
 
         if (bind(sS, (sockaddr*)&servSettings, sizeof(servSettings)) == SOCKET_ERROR)
             throw SetErrorMsgText("bind: ", WSAGetLastError());
 
         char callsign[50] = "hello";
-        
 
-        SOCKET clientSocket;
         SOCKADDR_IN client;
         memset(&client, 0, sizeof(client));
-
         int lClient = sizeof(client);
         int optval = 1;
 
         if (setsockopt(sS, SOL_SOCKET, SO_BROADCAST, (char*)&optval, sizeof(int)) == SOCKET_ERROR)
-            throw SetErrorMsgText("socket: ", WSAGetLastError());
+            throw SetErrorMsgText("setsockopt: ", WSAGetLastError());
 
-        ////////////////////////////////////////////////
+        localIPs = GetLocalIPs();
 
         SOCKADDR_IN all;
         all.sin_family = AF_INET;
         all.sin_port = htons(2000);
-        all.sin_addr.S_un.S_addr = inet_addr("255.255.255.255");
-        sendto(sS, "hello", sizeof("hello") - 1, 0, (sockaddr*)&all, sizeof(all));
+        all.sin_addr.S_un.S_addr = inet_addr("192.168.100.255");
+
+        sendto(sS, "hello", strlen("hello"), 0, (sockaddr*)&all, sizeof(all));
 
         timeval timeWaiting{};
-        timeWaiting.tv_sec = 5; timeWaiting.tv_usec = 0;
+        timeWaiting.tv_sec = 5;
+        timeWaiting.tv_usec = 0;
         setsockopt(sS, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeWaiting, sizeof(timeWaiting));
 
         char inputBuffer[50];
@@ -158,44 +187,48 @@ int main()
         SOCKADDR_IN duplicateServer;
         int duplicateSize = sizeof(duplicateServer);
 
-        char localIP[INET_ADDRSTRLEN] = {};
 
         while (true)
         {
-            if ((inputLength = recvfrom(sS, inputBuffer, sizeof(inputBuffer) - 1, 0, (sockaddr*)&duplicateServer,
-                &duplicateSize)) == SOCKET_ERROR)
+            if ((inputLength = recvfrom(sS, inputBuffer, sizeof(inputBuffer) - 1, 0,
+                (sockaddr*)&duplicateServer, &duplicateSize)) == SOCKET_ERROR)
             {
-                if (WSAGetLastError() == WSAETIMEDOUT)
+                if (WSAGetLastError() == WSAETIMEDOUT) {
+                    cout << "timeout reached" << endl;
                     break;
+                }
                 else throw SetErrorMsgText("duplicate recvfrom: ", WSAGetLastError());
             }
+
             inputBuffer[inputLength] = '\0';
 
             char duplicateIP[INET_ADDRSTRLEN];
-            inet_ntop(AF_INET, &duplicateServer.sin_addr.S_un.S_addr, duplicateIP, sizeof(duplicateIP));
+            inet_ntop(AF_INET, &duplicateServer.sin_addr, duplicateIP, sizeof(duplicateIP));
+
+            cout << "Received from IP: " << duplicateIP << " message: " << inputBuffer << " (length: " << inputLength << ")" << endl;
 
             if (strcmp(inputBuffer, callsign) == 0)
             {
-                if (strcmp(duplicateIP, localIP) == 0 || strcmp(duplicateIP,"10.118.203.206") ==0)
-                {
-                    char IP[INET_ADDRSTRLEN];
-                    inet_ntop(AF_INET, &duplicateServer.sin_addr.S_un.S_addr, IP, sizeof(IP));
-                    cout << "duplicate server found\nIP: " << IP << endl;
-                    break;
+                if (localIPs.find(string(duplicateIP)) == localIPs.end()) {
+                    cout << "duplicate server found" << duplicateIP << endl;
+                    duplicateServers.insert(string(duplicateIP));
                 }
-               
             }
-            
-            
         }
-        cout << "duplicate server not found" << endl;
-        timeWaiting.tv_sec = 0; timeWaiting.tv_usec = 0;
+
+        cout << "Found " << duplicateServers.size() << " duplicate server(s)" << endl;
+
+        timeWaiting.tv_sec = 0;  
+        timeWaiting.tv_usec = 0;
         setsockopt(sS, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeWaiting, sizeof(timeWaiting));
+
 
         while (true)
         {
-            if (GetRequestFromClient(&sS, (char*)"hello", (sockaddr*)&client, &lClient))
+            if (GetRequestFromClient(&sS, (char*)"hello", (sockaddr*)&client, &lClient, duplicateServers))
             {
+                char clientIP[INET_ADDRSTRLEN];
+                inet_ntop(AF_INET, &client.sin_addr, clientIP, INET_ADDRSTRLEN);
                 PutAnswerToClient(&sS, (char*)"hello", (sockaddr*)&client, &lClient);
             }
         }
@@ -204,11 +237,11 @@ int main()
             throw SetErrorMsgText("closesocket: ", WSAGetLastError());
 
         if (WSACleanup() == SOCKET_ERROR)
-            throw SetErrorMsgText("Cleaunp: ", WSAGetLastError());
+            throw SetErrorMsgText("Cleanup: ", WSAGetLastError());
     }
     catch (string msg)
     {
         cout << "\n" << msg << endl;
     }
+    return 0;
 }
-

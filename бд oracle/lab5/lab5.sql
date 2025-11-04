@@ -24,6 +24,7 @@ text varchar(50)
 insert into task7(id,text) values (1,'adasda');
 insert into task7(id,text) values (2,'sdgbg');
 insert into task7(id,text) values (3,'erewrw');
+drop table task7 purge;
 
 select * from dba_segments where segment_name = 'TASK7';
 

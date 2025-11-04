@@ -37,7 +37,6 @@ int main(int argc, char** argv)
             handles[processes++] = pi3.hProcess;
 
         } else cout << "process 1 failed" << endl;
-    system("pause");
         if(WaitForMultipleObjects(processes,handles,TRUE,60000) == WAIT_FAILED)
         {
             cout << "wait failed";
