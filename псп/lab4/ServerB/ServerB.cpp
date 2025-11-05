@@ -128,6 +128,7 @@ set<string> GetLocalIPs() {
                 char ip[INET_ADDRSTRLEN];
                 inet_ntop(AF_INET, host->h_addr_list[i], ip, INET_ADDRSTRLEN);
                 localIPs.insert(string(ip));
+                cout << "local ip: " << ip << endl;
             }
         }
     }
@@ -172,7 +173,7 @@ int main()
         SOCKADDR_IN all;
         all.sin_family = AF_INET;
         all.sin_port = htons(2000);
-        all.sin_addr.S_un.S_addr = inet_addr("192.168.100.255");
+        all.sin_addr.S_un.S_addr = inet_addr("10.118.203.255");
 
         sendto(sS, "hello", strlen("hello"), 0, (sockaddr*)&all, sizeof(all));
 

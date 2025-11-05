@@ -127,7 +127,7 @@ int main()
         sockaddr_in servSettings;
         servSettings.sin_family = AF_INET;
         servSettings.sin_port = htons(2000);
-        servSettings.sin_addr.S_un.S_addr = inet_addr("192.168.100.255");
+        servSettings.sin_addr.S_un.S_addr = inet_addr("10.118.203.255");
         int servSize = sizeof(servSettings);
 
         int optval = 1;
