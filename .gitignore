@@ -333,7 +333,6 @@ _Pvt_Extensions
 # Paket dependency manager
 **/.paket/paket.exe
 paket-files/
-
 # FAKE - F# Make
 **/.fake/
 
@@ -404,6 +403,11 @@ FodyWeavers.xsd
 !.vscode/launch.json
 !.vscode/extensions.json
 !.vscode/*.code-snippets
+
+package-lock.json
+package.json
+.package-lock.json
+
 
 # Local History for Visual Studio Code
 .history/
