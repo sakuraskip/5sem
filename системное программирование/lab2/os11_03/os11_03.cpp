@@ -38,7 +38,7 @@ int main(int argc, char** argv)
 
     const int maxKeys = 50;
 
-    HT::HTHANDLE* ht = HT::Open("test2.ht");
+    HT::HTHANDLE* ht = HT::Open("table.ht");
     if (ht == NULL)
     {
         CloseHandle(m);

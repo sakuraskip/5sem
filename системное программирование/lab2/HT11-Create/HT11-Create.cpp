@@ -11,7 +11,7 @@ int main(int argc, char** argv)
 	}
 	int capacity = atoi(argv[1]), snapInterval = atoi(argv[2]), maxkeylength = atoi(argv[3]), maxpayloadlength = atoi(argv[4]);
 	char* filename = argv[5];
-	if (capacity <= 0 || snapInterval <= 0 || maxkeylength <= 0 || maxpayloadlength <= 0 || )
+	if (capacity <= 0 || snapInterval <= 0 || maxkeylength <= 0 || maxpayloadlength <= 0)
 	{
 		cerr << "all the parameters should be more than 0" << endl;
 		return 1;

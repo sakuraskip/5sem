@@ -20,8 +20,7 @@ namespace aspa0011_1.Models//log is stolen idgaf im tired
         }
         public ChannelService()
         {
-            _logger.LogTrace("[{EventId}] {Timestamp} - ChannelService started",
-          ++_eventCounter, DateTime.Now);
+           
         }
         
 
@@ -120,7 +119,7 @@ namespace aspa0011_1.Models//log is stolen idgaf im tired
                         Status = "channel not found"
                     };
                 }
-                if (_aspChannels[index].State == "ACTIVE")
+                if (_aspChannels[index].State.ToUpper() == "ACTIVE")
                 {
                     _channels[index].Writer.Complete();
                     _aspChannels[index].State = "CLOSED";

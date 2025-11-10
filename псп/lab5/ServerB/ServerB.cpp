@@ -100,6 +100,9 @@ bool GetRequestFromClient(SOCKET* sock, char* uname, struct sockaddr* from, int*
         }
 
         cout << "GetRequestFromClient from " << fromIP << ": " << inputBuffer << endl;
+        struct in_addr addr = ((sockaddr_in*)from)->sin_addr;
+        hostent* remoteHost = gethostbyaddr((char*)&addr, sizeof(addr), AF_INET);
+        cout << "client hostname: " << remoteHost->h_name << endl;
         if (strcmp(uname, inputBuffer) == 0)
             return true;
     }
@@ -149,7 +152,7 @@ int main()
         if ((sS = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == INVALID_SOCKET)
             throw SetErrorMsgText("socket: ", WSAGetLastError());
 
-        char sHostname[BUFSIZ] = "";
+        char sHostname[BUFSIZ] = "leksus";
         gethostname(sHostname, strlen(sHostname));
             sHostname[BUFSIZ-1] = '\0';
             cout << "\nserver hostname: " << sHostname << endl;
@@ -179,7 +182,7 @@ int main()
         SOCKADDR_IN all;
         all.sin_family = AF_INET;
         all.sin_port = htons(2000);
-        all.sin_addr.S_un.S_addr = inet_addr("192.168.100.255");
+        all.sin_addr.S_un.S_addr = inet_addr("10.118.203.255");
 
         sendto(sS, "hello", strlen("hello"), 0, (sockaddr*)&all, sizeof(all));
 

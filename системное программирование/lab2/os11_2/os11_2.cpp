@@ -34,7 +34,7 @@ int main(int argc, char** argv)
 	int maxKeys = 50;
 	int i = 0;
 
-	HT::HTHANDLE* ht = HT::Open("test2.ht");
+	HT::HTHANDLE* ht = HT::Open("table.ht");
 	if (ht == NULL)
 	{
 		CloseHandle(m);
@@ -42,6 +42,7 @@ int main(int argc, char** argv)
 	}
 	while(active)
 	{
+
 		string key = "key" + to_string(i%maxKeys);
 		HT::Element* e = new HT::Element(key.c_str(), key.length(), 0, 4);
 		if ( HT::Insert(ht, e) )

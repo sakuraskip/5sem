@@ -52,13 +52,61 @@ int main(int argc, char** argv)
         cerr << "create thread 1 error" << endl;
         ExitProcess(1);
     }
-    lab04x(&parm);
-    system("pause");
-    if( !WaitForMultipleObjects(MAX_THREADS,handles,TRUE,60000) )
+
+     char name[] = "User-d4c889c4";
+    int nameLength = sizeof(name)/sizeof(name[0]);
+    int nameIter = 0;
+ 
+    for(int i = 0; i <= parm; i++)
+    {
+        printf("%d - %d - %d - %c\n",getpid(),_threadid,i,name[nameIter++]);
+        if( nameIter >= nameLength )
+        {
+            nameIter = 0;
+        }
+        if(i == 20)
+        {
+            if(SuspendThread(handles[0])!=-1)
+            {
+                cout << "thread 0 suspended" << endl;
+            }
+            else cerr << "error suspending thread 0" << endl;
+        }
+        if(i == 60)
+        {
+            if(ResumeThread(handles[0])!=-1)
+            {
+                cout << "thread 0 resumed" << endl;
+            }
+            else cerr << "failed to resume thread 0" << endl;
+        }
+        if(i == 40)
+        {
+            if(SuspendThread(handles[1])!=-1)
+            {
+                cout << "thread 1 suspended" << endl;
+            }
+            else cerr << "error suspending thread 1" << endl;
+        }
+        Sleep(300);
+    }
+
+            if(ResumeThread(handles[1])!=-1)
+            {
+                cout << "thread 1 resumed" << endl;
+            }
+            else cerr << "failed to resume thread 1" << endl;
+
+
+    if( WaitForMultipleObjects(MAX_THREADS,handles,TRUE,60000) == WAIT_FAILED )
     {
         cerr << "wait for threads error" << endl;
         return 1;
     }
-
+    for(int i = 0;i < MAX_THREADS;i++)
+    {
+        CloseHandle(handles[i]);
+        cout << "closed thread " << i << endl;
+    }
     return 0;
 }

@@ -53,12 +53,15 @@ int main(int argc, char** argv)
         ExitProcess(1);
     }
     lab04x(&parm);
-    system("pause");
-    if( !WaitForMultipleObjects(MAX_THREADS,handles,TRUE,60000) )
+    if( WaitForMultipleObjects(MAX_THREADS,handles,TRUE,60000) == WAIT_FAILED )
     {
         cerr << "wait for threads error" << endl;
         return 1;
     }
-
+    for(int i = 0;i < MAX_THREADS;i++)
+    {
+        CloseHandle(handles[i]);
+        cout << "closed thread " << i << endl;
+    }
     return 0;
 }
