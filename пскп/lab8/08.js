@@ -10,6 +10,18 @@ const staticDirectory = path.join(__dirname,'/static');
 const port = 5000;
 const host = '127.0.0.1';
 
+const extensions = ["html", "css", "js", "png", "docx", "json", "xml", "mp4"];
+const mimeTypes = [
+  "text/html",
+  "text/css",
+  "text/javascript",
+  "image/png",
+  "application/msword",
+  "application/json",
+  "application/xml",
+  "video/mp4",
+];
+
 const parser = new XMLParser(
     {
         ignoreAttributes: false,
@@ -100,6 +112,11 @@ const server = http.createServer((req, res) => {
         HandleUploadPost(res,req,parsedUrl);
         break;
       }
+      default:
+        {
+          res.statusCode = 400;
+          res.end("wrong method or url or anything");
+        }
   }
 });
 
@@ -108,32 +125,37 @@ server.listen(port,host,()=>
   console.log('server started');
 });
 
+
 function HandleConnection(res, parsedUrl) {
   res.setHeader("Content-Type", "text/plain");
+
   if (parsedUrl.query.set) {
-    let keepAlive = parseInt(parsedUrl.query.set);
-    if (keepAlive <= 0 || isNaN(keepAlive)) {
+    let keepAliveSec = parseInt(parsedUrl.query.set, 10);
+
+    if (keepAliveSec <= 0 || isNaN(keepAliveSec)) {
       res.statusCode = 400;
-      res.end("set should be > than 0");
+      res.end("set should be > 0 (seconds)");
     } else {
-      server.keepAliveTimeout = keepAlive;
+      server.keepAliveTimeout = keepAliveSec * 1000;
+
       res.statusCode = 200;
-      res.end("установлено новое значение параметра keepalive: " + keepAlive);
+      res.end(" новое значение параметра keepAliveTimeout: " + keepAliveSec + " ");
     }
   } else {
     res.statusCode = 200;
-    res.end("KeepAliveTimeout: " + server.keepAliveTimeout);
+    res.end("KeepAliveTimeout: " + Math.floor(server.keepAliveTimeout / 1000) + " seconds");
   }
+
   return;
 }
 function HandleHeaders(req, res) {
-  res.setHeader("X-lab8-Header", "labka number 8");
+  res.setHeader("X-lab8-Header", "lab number 8");
 
   let reqheaders = JSON.stringify(req.headers, null, 1);
-  let resheaders = JSON.stringify(res.getHeaders(), null, 1);
 
   res.statusCode = 200;
   res.setHeader("Content-Type", "text/html");
+  let resheaders = JSON.stringify(res.getHeaders(), null, 1);
   res.end(`<h1>Request headers: </h1>
         <p>${reqheaders}</p>
         <h1>Response Headers </h1>
@@ -245,6 +267,7 @@ function HandleFormPost(res, req, parsedUrl) {
 
   req.on('end', () => {
     const params = querystring.parse(body);
+    console.log(params);
     res.statusCode = 200;
     res.setHeader('Content-Type', 'text/html');
     res.write('<h1>params:</h1><br/>');
@@ -405,10 +428,24 @@ function HandleFiles(res,req,parsedUrl)
 function HandleFilesWithName(res,req,parsedUrl)
 {
   let filename = decodeURIComponent(parsedUrl.pathname.slice('/files/'.length));
-  let filepath = path.join(staticDirectory,filename);
+  let extension = path.extname(filename).slice(1).toLowerCase();
 
+  let mimeTypeIndex = extensions.indexOf(extension);
+
+  
+  let filepath = path.join(staticDirectory,filename);
+  fs.access(filepath, fs.constants.F_OK, (accessErr) => {
+        if (accessErr) {
+            res.statusCode = 404;
+            res.end('File not found');
+            return;
+        }
   try
   {
+      if(mimeTypeIndex != -1)
+      {
+        res.setHeader('Content-Type',mimeTypes[mimeTypeIndex]);
+      }
       res.setHeader('Content-Disposition',`attachment; filename="${filename}"`);
       res.statusCode = 200;
       fs.createReadStream(filepath).pipe(res);
@@ -418,8 +455,7 @@ function HandleFilesWithName(res,req,parsedUrl)
     res.statusCode = 400;
     res.end('error: ', exception.message);
   }
- 
-
+});
 return;
   
 }
@@ -458,11 +494,12 @@ function HandleUploadPost(res,req,parsedUrl)
         res.end('file rename/save error');
         return;
       }
-    });
-
     res.setHeader('Content-Type','text/plain');
     res.statusCode = 200;
     res.end('file uploaded successfully');
+    });
+
+   
 
   });
   return;

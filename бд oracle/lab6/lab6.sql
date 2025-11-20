@@ -6,6 +6,7 @@ select file_name from dba_data_files;
 select role from dba_roles;
 select username from dba_users;
 --task4 regedit
+--task5 sqlplus C##SAV/12345@SAV_SID
 
 --task7 DO NOT FORGET TO COMMIT 
 create table lab6(
@@ -28,3 +29,4 @@ sum(blocks) as blocks_count,
 sum(bytes)/1024 as kb_count from dba_segments;
 
 drop view task11;
+

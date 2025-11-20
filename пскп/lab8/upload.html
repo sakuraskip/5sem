@@ -9,6 +9,11 @@
     <h1>upload file</h1>
     <form method="POST" action="/upload" enctype="multipart/form-data">
         <input type="file" name="uploadFile" required/>
+        <label>data: <input type="date" name="dateInput" /></label><br/>
+                <label>checkbox: <input type="checkbox" name="checkboxInput" value="on" /></label><br/>
+                
+                <label>radio1 <input type="radio" name="radioInput" value="option1" /></label><br/>
+                <label>radio2 <input type="radio" name="radioInput" value="option2" /></label><br/>
         <button type="submit">upload</button>
     </form>
 </body>

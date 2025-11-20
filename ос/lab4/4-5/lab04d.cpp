@@ -30,6 +30,7 @@ int main()
             cout << "thread id: " << thread.th32ThreadID << endl;
         }
     }
+    system("pause");
     CloseHandle(threadsnap);
     return 0;
 }

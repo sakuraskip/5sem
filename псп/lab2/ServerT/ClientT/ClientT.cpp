@@ -104,7 +104,7 @@ int main()
 
         char inputBuffer[50];
         char outputBuffer[50] = "hello from client\n";
-        string startMessage = "hello from client\n";//зачем
+        string startMessage = "echoo";//switch to "hello from client\n"
         int lengthInputBuffer = 0;
         int lengthOutputBuffer = 0;
 

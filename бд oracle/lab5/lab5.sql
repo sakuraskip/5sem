@@ -7,16 +7,15 @@ select name, round(BYTES/1024/1024) as mb from v$sgainfo;
 --task3
 select component, granule_size/1024/1024 as granule_size from v$sga_dynamic_components;
 --task4
-select name, bytes/1024/1024 as mb from v$sgastat where name = 'free memory';
+select POOL,name, bytes/1024/1024 as mb from v$sgastat where name = 'free memory';
 --task5
 select name, value/1024/1024 as mb from v$parameter where name like '%sga_max_size%'
 or name like '%sga_target%';
 --task6
-select current_size from v$sga_dynamic_components where component like '%KEEP%' or
+select component, current_size from v$sga_dynamic_components where component like '%KEEP%' or
 component like '%RECYCLE%' or component like '%DEFAULT%';
 --auto memory management, so no recycle and keep pools
 select name,value from v$parameter where name like '%sga_target%' or name like '%sga_max_size%';
-
 --task7
 create table task7 (
 id number primary key,
@@ -25,9 +24,8 @@ text varchar(50)
 insert into task7(id,text) values (1,'adasda');
 insert into task7(id,text) values (2,'sdgbg');
 insert into task7(id,text) values (3,'erewrw');
-drop table task7 purge;
 
-select segment_name,segment_type from dba_segments where segment_name = 'TASK7';
+select * from dba_segments where segment_name = 'TASK7';
 
 drop table task7 purge;
 --task8
@@ -39,13 +37,14 @@ insert into task8(id,text) values (1,'adasda');
 insert into task8(id,text) values (2,'sdgbg');
 insert into task8(id,text) values (3,'erewrw');
 
-select segment_name,segment_type from dba_segments where segment_name = 'TASK8';
-
+select * from dba_segments where segment_name = 'TASK8';
+drop table task8 purge;
 --task9
 select name, value/1024/1024 as mb from v$parameter where name like '%log_buffer%';
 
 --task10
-select pool, name, bytes/1024/1024 as mb from v$sgastat where pool like '%large pool%';
+select pool, name, bytes/1024/1024 as mb from v$sgastat where pool like '%large pool%'
+and name like '%free memory%';
 
 --task11
 select server, username, type from v$session where type like '%USER%';
@@ -54,7 +53,7 @@ select server, username, type from v$session where type like '%USER%';
 select * from v$bgprocess;
 --task13
 --background = null -> system
-select pname from v$process where background is null;
+select * from v$process where background is null;
 
 --task14
 select count(*) as proc_count from v$bgprocess where name like '%DBW%';
@@ -63,7 +62,7 @@ select count(*) as proc_count from v$bgprocess where name like '%DBW%';
 select name from dba_services;
 
 --task16
-select name,status,network from v$dispatcher;
+select * from v$dispatcher;
 select name,value from v$parameter where name like '%shared%' or name like '%dispatchers%';
 
 --task17 services.msc -> oracleListener

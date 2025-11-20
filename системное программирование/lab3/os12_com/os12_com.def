@@ -1,0 +1,6 @@
+LIBRARY "os12_com"
+EXPORTS
+    DllRegisterServer
+    DllUnregisterServer
+    DllGetClassObject
+    DllCanUnloadNow

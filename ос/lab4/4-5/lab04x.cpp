@@ -25,6 +25,7 @@ int main(int argc, char** argv)
     }
     for(int i = 0; i <= N; i++)
     {
+        
         printf("%d - %d - %d - %c\n",getpid(),_threadid,i,name[nameIter++]);
         if( nameIter >= nameLength )
         {
