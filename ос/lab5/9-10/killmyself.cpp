@@ -221,7 +221,6 @@ int main()
     
     int finalQ0 = 0, finalQ1 = 0, finalQ2 = 0;
     
-    // Для расчета средних значений по очередям
     double waitQ0 = 0, waitQ1 = 0, waitQ2 = 0;
     double turnAroundQ0 = 0, turnAroundQ1 = 0, turnAroundQ2 = 0;
     
