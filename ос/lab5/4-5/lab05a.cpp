@@ -46,10 +46,8 @@ int main()
     cout << "process priority class: " << processPriorityClass << endl;
 
     cout << "thread priority: " << threadPriority << endl;
-
     cout << " process affinity mask: " << processAffinityMask << endl;
     cout << "system affinity mask : " << systemAffinityMask << endl;
-
     cout << "available processors cound: " << processorCount << endl;
     cout << "process number for current thread: " << processorNumber << endl;
 

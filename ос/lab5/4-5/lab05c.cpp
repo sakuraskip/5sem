@@ -1,12 +1,59 @@
 #include <windows.h>
 #include <iostream>
 #include <cstdlib>
-
+#include <chrono>
+using namespace std::chrono;
 using namespace std;
 
-//1: lab05c.exe 4294967295 32768 0 0
-//2: lab05c.exe 4294967295 32768 -2 2
-//3: lab05c.exe 1 32768 -2 2
+
+DWORD WINAPI ThreadFunction(LPVOID lpParam)
+{
+    int* params = (int*)lpParam;
+    int priority = params[0];
+    DWORD_PTR affinityMask = (DWORD_PTR)params[1];
+    int threadNum = params[2];
+    
+    int totalIterations = 200000;
+    int interval = 1000;
+    int delayMs = 200;
+
+    int pid = GetCurrentProcessId();
+    int tid = GetCurrentThreadId();
+    HANDLE hThread = GetCurrentThread();
+
+    SetThreadPriority(hThread, priority);
+    SetThreadAffinityMask(hThread, affinityMask);
+
+    clock_t startTime = clock();
+
+    for (int i = 1; i <= totalIterations; i++)
+    {
+        if (i % interval == 0)
+        {
+            Sleep(delayMs);
+
+            int processPriorityClass = GetPriorityClass(GetCurrentProcess());
+            int threadPriority = GetThreadPriority(hThread);
+            int processorNumber = GetCurrentProcessorNumber();
+
+            cout << "Thread " << threadNum << " - i: " << i << endl;
+            cout << "PID: " << pid << endl;
+            cout << "TID: " << tid << endl;
+            cout << "process priority class: " << processPriorityClass << endl;
+            cout << "thread priority: " << threadPriority << endl;
+            cout << "process numba: " << processorNumber << endl;
+            cout << "------------------------" << endl;
+        }
+    }
+
+    clock_t endTime = clock();
+    double res = double(endTime - startTime) / CLOCKS_PER_SEC;
+
+    cout << "thread " << threadNum << " time: " << res << " seconds" << endl;
+    
+    delete[] params;
+    return 0;
+}
 
 int main(int argc, char** argv)
 {
@@ -16,10 +63,10 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    DWORD_PTR affinityMask = static_cast<DWORD_PTR>(atoi(argv[1]));
+    DWORD_PTR affinityMask = static_cast<DWORD_PTR>(_atoi64(argv[1]));
     int parentPriority = atoi(argv[2]);
-    int priorityClass1 = atoi(argv[3]);
-    int priorityClass2 = atoi(argv[4]);
+    int priority1 = atoi(argv[3]);
+    int priority2 = atoi(argv[4]);
 
     HANDLE hParent = GetCurrentProcess();
     if (!SetPriorityClass(hParent, parentPriority))
@@ -28,34 +75,42 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    STARTUPINFOA si1 = { sizeof(si1) };
-    PROCESS_INFORMATION pi1 = {};
-    STARTUPINFOA si2 = { sizeof(si2) };
-    PROCESS_INFORMATION pi2 = {};
+    int* params1 = new int[3];
+    params1[0] = priority1;
+    params1[1] = (int)affinityMask;
+    params1[2] = 1;
 
-    if (!CreateProcessA("bin/lab05x.exe", NULL, NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, NULL, &si1, &pi1))
+    int* params2 = new int[3];
+    params2[0] = priority2;
+    params2[1] = (int)affinityMask;
+    params2[2] = 2;
+
+    HANDLE hThread1 = CreateThread(NULL, 0, ThreadFunction, params1, 0, NULL);
+    if (hThread1 == NULL)
     {
-        cerr << "Create process 1 fail " << endl;
+        cerr << "Create thread 1 fail " << endl;
+        delete[] params1;
         return 1;
     }
-    SetPriorityClass(pi1.hProcess, priorityClass1);
-    SetProcessAffinityMask(pi1.hProcess, affinityMask);
 
-    if (!CreateProcessA("bin/lab05x.exe", NULL, NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, NULL, &si2, &pi2))
+    HANDLE hThread2 = CreateThread(NULL, 0, ThreadFunction, params2, 0, NULL);
+    if (hThread2 == NULL)
     {
-        CloseHandle(pi1.hProcess);
-        CloseHandle(pi1.hThread);
-        cerr << "Create process 2 fail" << endl;
+        cerr << "Create thread 2 fail" << endl;
+        CloseHandle(hThread1);
+        delete[] params1;
+        delete[] params2;
         return 1;
     }
-    SetPriorityClass(pi2.hProcess, priorityClass2);
-    SetProcessAffinityMask(pi2.hProcess, affinityMask);
 
-    CloseHandle(pi1.hThread);
-    CloseHandle(pi1.hProcess);
+    WaitForSingleObject(hThread1, INFINITE);
+    WaitForSingleObject(hThread2, INFINITE);
 
-    CloseHandle(pi2.hThread);
-    CloseHandle(pi2.hProcess);
+    CloseHandle(hThread1);
+    CloseHandle(hThread2);
+
+    cout << "keypress?......??????" << endl;
+    system("pause");
 
     return 0;
 }

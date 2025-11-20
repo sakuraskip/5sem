@@ -22,6 +22,7 @@ int main()
 {
     int taskAmount = 10;
 
+
     task tasks[taskAmount] = 
     {   
     {1, 0,   80, 80, 3, 0, 0, 0},
@@ -36,7 +37,8 @@ int main()
     {10, 200, 85, 85, 1, 0, 0, 0}
     };
 
-    int quant = 20;
+    cout << "exec order: " << endl;
+    int quant = 90;
 
     int currentTime = 0;
     int doneAmount = 0;
@@ -81,6 +83,7 @@ int main()
         tasks[currentTaskIndex].fromArrivalToCompleted = tasks[currentTaskIndex].whenCompleted - tasks[currentTaskIndex].arrivalTime;
         tasks[currentTaskIndex].waitingTime = tasks[currentTaskIndex].fromArrivalToCompleted - tasks[currentTaskIndex].burstTime;
         doneAmount++;
+        cout << tasks[currentTaskIndex].id << " -> ";
     }
     else
     {
@@ -119,8 +122,8 @@ int main()
         totalBurstTime+=tasks[i].burstTime;
         
     }
-    cout << "average waiting time: " << (float)totalWaitingTime/taskAmount << endl;
-    cout << "average время оборота time: " << (double)totalFromArrivalToCompleted / taskAmount << endl;
+    cout << "\naverage waiting time: " << (float)totalWaitingTime/taskAmount << endl;
+    cout << "average turn around time: " << (double)totalFromArrivalToCompleted / taskAmount << endl;
     cout << "average burst time: " << (double)totalBurstTime / taskAmount << endl;
     cout << "total exec time: " << totalWastedTime << endl;
     cout << "time per task: " << (double)taskAmount / totalWastedTime << endl;
