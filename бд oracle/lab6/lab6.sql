@@ -28,5 +28,6 @@ sum(extents) as extents_count,
 sum(blocks) as blocks_count,
 sum(bytes)/1024 as kb_count from dba_segments;
 
+select * from task11;
 drop view task11;
 

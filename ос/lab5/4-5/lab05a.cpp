@@ -4,7 +4,6 @@
 
 using namespace std;
 
-
 int main()
 {
     int pid = GetCurrentProcessId();
@@ -46,9 +45,12 @@ int main()
     cout << "process priority class: " << processPriorityClass << endl;
 
     cout << "thread priority: " << threadPriority << endl;
-    cout << " process affinity mask: " << processAffinityMask << endl;
-    cout << "system affinity mask : " << systemAffinityMask << endl;
-    cout << "available processors cound: " << processorCount << endl;
+    
+    cout << "process affinity mask (bin): " << bitset<16>(processAffinityMask) << endl;
+    
+    cout << "system affinity mask (bin): " << bitset<16>(systemAffinityMask) << endl;
+    
+    cout << "available processors count: " << processorCount << endl;
     cout << "process number for current thread: " << processorNumber << endl;
 
     return 0;

@@ -1,6 +1,5 @@
 #include "stdafx.h"
 
-//определяют идентификаторы команд меню
 #define ID_Dr1 2002
 #define ID_Dr 2003
 #define ID_AngF 2004
@@ -11,7 +10,7 @@ class CMainWin : public CFrameWnd
 {
 public:
 	int ang1 = 10;
-	int ang2 = 315;
+	int ang2 = 45;
 	int ang3 = 45;
 
 	CMainWin()
@@ -77,7 +76,7 @@ afx_msg int CMainWin::OnCreate(LPCREATESTRUCT)
 	sub.AppendMenu(MF_STRING, ID_AngF, _T("Текущие углы камеры"));
 	sub.AppendMenu(MF_STRING, ID_AngD, _T("По умолчанию"));
 
-	menu->AppendMenu(MF_POPUP, (UINT_PTR)sub.Detach(), _T("пирамидка"));	SetMenu(menu);
+	menu->AppendMenu(MF_POPUP, (UINT_PTR)sub.Detach(), _T("Пирамида"));	SetMenu(menu);
 	return 0;
 }
 
@@ -126,8 +125,6 @@ void CMainWin::AngF()
 
 void CMainWin::AngD()
 {
-	ang2 = 315;
-	ang3 = 45;
 	PView(1) = ang2;
 	PView(2) = ang3;
 	Invalidate();

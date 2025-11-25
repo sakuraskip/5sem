@@ -13,6 +13,7 @@ DWORD WINAPI ThreadFunction(LPVOID lpParam)
     DWORD_PTR affinityMask = (DWORD_PTR)params[1];
     int threadNum = params[2];
     
+    
     int totalIterations = 200000;
     int interval = 1000;
     int delayMs = 200;
@@ -79,6 +80,8 @@ int main(int argc, char** argv)
     params1[0] = priority1;
     params1[1] = (int)affinityMask;
     params1[2] = 1;
+     cout << "parms: " <<"affinity mask: " <<  affinityMask << " priority1: " << priority1
+    << " priority2: " << priority2 << endl; 
 
     int* params2 = new int[3];
     params2[0] = priority2;

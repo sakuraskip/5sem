@@ -17,7 +17,8 @@ int main(int argc, char** argv)
     int priorityClass1 = atoi(argv[2]);
     int priorityClass2 = atoi(argv[3]);
 
-
+    cout << "parms: " <<"affinity mask: " <<  affinityMask << " priority1: " << priorityClass1
+    << " priority2: " << priorityClass2 << endl; 
    
 
     STARTUPINFOA si1 = { sizeof(si1) };

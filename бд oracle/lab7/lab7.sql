@@ -69,7 +69,8 @@ values (s1.nextval, s2.nextval,s3.nextval,s4.nextval);
 end loop
 commit;
 end;
-
+/
+select * from A;
 --task9-12
 create cluster abc(
 x number(10),
@@ -91,7 +92,7 @@ vc varchar(12),
 text varchar(50)) cluster abc (xc,vc);
 
 --task13
-select * from user_tables where table_name in ('A1','B','C');
+select buffer_pool from user_tables where table_name in ('A1','B','C');
 select * from user_clusters where cluster_name like 'ABC';
 
 --task14

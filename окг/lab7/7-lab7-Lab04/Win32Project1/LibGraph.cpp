@@ -51,34 +51,6 @@ CMatrix SpaceToWindow(CRectD& RS, CRect& RW)
 	M(2, 0) = 0;   M(2, 1) = 0;    M(2, 2) = 1;
 	return M;
 }
-
-/* // Старая версия функции SpaceToWindow
-
-CMatrix SpaceToWindow(CRectD& rs,CRect& rw)
-// Возвращает матрицу пересчета координат из мировых в оконные
-// rs - область в мировых координатах - double
-// rw - область в оконных координатах - int
-{
-	CMatrix M(3,3);
-  CSize sz = rw.Size();	 // Размер области в ОКНЕ
-  int dwx=sz.cx;	     // Ширина
-  int dwy=sz.cy;	     // Высота
-  CSizeD szd=rs.SizeD(); // Размер области в МИРОВЫХ координатах
-
-  double dsx=szd.cx;    // Ширина в мировых координатах
-  double dsy=szd.cy;    // Высота в мировых координатах
-
-  double kx=(double)dwx/dsx;   // Масштаб по x
-  double ky=(double)dwy/dsy;   // Масштаб по y
-
-  M(0,0)=kx;  M(0,1)=0;    M(0,2)=(double)rw.left;
-  M(1,0)=0;   M(1,1)=-ky;  M(1,2)=(double)rw.bottom;
-  M(2,0)=0;   M(2,1)=0;    M(2,2)=1;
-	return M;
- }
-*/
-
-
 //------------------------------------------------------------------------------
 
 void SetMyMode(CDC& dc, CRect& RS, CRect& RW)  //MFC

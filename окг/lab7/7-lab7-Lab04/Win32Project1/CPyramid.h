@@ -8,6 +8,7 @@ class CPyramid
 {
 	CMatrix Vertices;	// Координаты вершин
 	CMatrix Nabcd;	// Вектор ВНЕШНей нормали к основанию пирамиды
+	CMatrix Nefgh;
 
 	void GetRect(CMatrix& Vert, CRectD& RectView);
 public:

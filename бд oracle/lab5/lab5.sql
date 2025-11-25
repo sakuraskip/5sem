@@ -12,7 +12,7 @@ select POOL,name, bytes/1024/1024 as mb from v$sgastat where name = 'free memory
 select name, value/1024/1024 as mb from v$parameter where name like '%sga_max_size%'
 or name like '%sga_target%';
 --task6
-select component, current_size from v$sga_dynamic_components where component like '%KEEP%' or
+select component, current_size/1024/1024 as size_mb from v$sga_dynamic_components where component like '%KEEP%' or
 component like '%RECYCLE%' or component like '%DEFAULT%';
 --auto memory management, so no recycle and keep pools
 select name,value from v$parameter where name like '%sga_target%' or name like '%sga_max_size%';
