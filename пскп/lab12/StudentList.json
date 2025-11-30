@@ -1,0 +1,14 @@
+[
+  {
+    "id": 3,
+    "name": "виктор кислый",
+    "bday": "tomorrow",
+    "speciality": "ПИ"
+  },
+  {
+    "id": 4,
+    "name": "киктор кислый",
+    "bday": "today",
+    "speciality": "ПИ"
+  }
+]
