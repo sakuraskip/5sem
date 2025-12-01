@@ -5,7 +5,11 @@ const ws = new RPC("ws://localhost:4000");
 ws.on("open", async () => {
   console.log("connected");
 
-  const [
+  try
+  {
+    await ws.login({login:'user',password:'pass'}).then(async ()=>
+    {
+      const [
     resSquare3,
     resSquare54,
     resMul13579113,
@@ -27,8 +31,20 @@ ws.on("open", async () => {
 
   const fibSum = resFib7.reduce((acc, val) => acc + val, 0);
   const finalResult = resSum + fibSum * resMul246;
+    console.log("result:", finalResult);
 
-  console.log("result:", finalResult);
+    });
+    
+      
+
+    
+    
+  }
+  catch(err)
+  {
+    console.log('err: ' + err);
+  }
+  
 });
 
 ws.on("close", () => {

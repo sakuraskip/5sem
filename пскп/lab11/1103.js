@@ -6,11 +6,12 @@ function heartbeat() {
   this.isAlive = true;
 }
 
-const wss = new WebSocket.Server({port:4000,perMessageDeflate:false,clientTracking:true});
+const wss = new WebSocket.Server({port:4000});
 let n = 0;
 wss.on('connection',(ws)=>
 {
     console.log('client connected');
+    
     ws.on('pong',heartbeat);
     ws.on('close',()=>
     {

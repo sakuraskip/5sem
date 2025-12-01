@@ -1,17 +1,17 @@
+const RPC = require('rpc-websockets').Client;
+
+const ws = new RPC('ws://localhost:4000');
 const WebSocket = require('ws');
 
-let ws = new WebSocket('ws://localhost:4000');
 
 ws.on('open', () => {
   console.log('connected');
+  ws.subscribe('B');
+  
 });
 
-ws.on('message', (data) => {
-    const message = JSON.parse(data);
-    if (message.event === 'B')
-    {
-      console.log('event B received');
-    }
+ws.on('B', () => {
+    console.log('event B');
 });
 
 ws.on('close', () => {

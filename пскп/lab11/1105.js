@@ -2,7 +2,13 @@ const RPC = require('rpc-websockets').Server;
 
 const rpc = new RPC({
     port: 4000,
-    host: 'localhost'
+    host: 'localhost',
+    auth: true 
+});
+
+rpc.setAuth(({login, password}) => {
+    console.log(`auth: ${login}:${password}`);
+    return login == 'user' && password == 'pass';
 });
 
 rpc.register('square', (params) => {
@@ -17,15 +23,15 @@ rpc.register('square', (params) => {
     } else {
         return { err: 'square expects 1 or 2 params' };
     }
-});
+}).public();
 
 rpc.register('sum', (params) => {
     return params.reduce((acc, value) => acc + value, 0);
-});
+}).public();
 
 rpc.register('mul', (params) => {
     return params.reduce((acc, value) => acc * value, 1);
-});
+}).public();
 
 rpc.register('fib', (params) => {
     if (params.length !== 1 || params[0] < 0) {
@@ -41,7 +47,7 @@ rpc.register('fib', (params) => {
         fibs.push(fibs[fibs.length - 1] + fibs[fibs.length - 2]);
     }
     return fibs.slice(0, n);
-});
+}).protected();
 
 rpc.register('fact', (params) => {
     if (params.length !== 1 || params[0] < 0) {
@@ -55,13 +61,14 @@ rpc.register('fact', (params) => {
     let f = 1;
     for (let i = 1; i <= n; i++) f *= i;
     return f;
-});
+}).protected();
+
 
 rpc.on('connection', () => {
-    console.log('сlient connected');
+    console.log('client connected');
 });
 
 rpc.on('disconnection', () => {
-    console.log('сlient disconnected');
+    console.log('client disconnected');
 });
 

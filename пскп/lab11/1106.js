@@ -1,24 +1,24 @@
-const WebSocket = require('ws');
-const fs = require('fs');
-const path = require('path');
+const RPC = require('rpc-websockets').Server;
 
+const rpc = new RPC({
+    port: 4000,
+    host: 'localhost'
+});
 
-const wss = new WebSocket.Server({port:4000});
+rpc.event('A');
+rpc.event('B'); 
+rpc.event('C');
 
-wss.on('connection',(ws)=>
-{
+rpc.on('connection', () => {
     console.log('client connected');
 });
+
 process.stdin.setEncoding('utf-8');
-process.stdin.on('data',(data)=>
-{
+process.stdin.on('data', (data) => {
     let event = data.toString().toUpperCase().trim();
-    if(event === 'A' || event === 'B' || event === 'C')
-    {
-        console.log('event ');
-        wss.clients.forEach(client=>
-        {
-            client.send(JSON.stringify({event}));
-        });
+    if (event === 'A' || event === 'B' || event === 'C') {
+        console.log('emitting event:', event);
+        rpc.emit(event);
     }
-})
+});
+

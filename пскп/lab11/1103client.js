@@ -15,4 +15,4 @@ ws.on('open',()=>
     {
         console.log('disconnected');
     });
-})
+});
