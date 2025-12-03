@@ -10,5 +10,11 @@
     "name": "киктор кислый",
     "bday": "today",
     "speciality": "ПИ"
+  },
+  {
+    "id": 2,
+    "name": "888",
+    "bday": "today",
+    "speciality": "ИСИТ"
   }
 ]

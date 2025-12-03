@@ -35,6 +35,7 @@ typedef struct HTHANDLE {
     BYTE* DataAddr;
     BOOL isStopped;
     HANDLE hMutex;
+    wchar_t HTUsersGroup[512];
 } HTHANDLE;
 
 typedef struct Element {
@@ -56,17 +57,15 @@ public:
         int MaxKeyLength,
         int MaxPayloadLength,
         const char* FileName,
-        const wchar_t* groupname,
+        const wchar_t* HTUsersGroup,
         HTHANDLE** result) = 0;
 
     virtual HRESULT STDMETHODCALLTYPE Open(
         const char* FileName,
         HTHANDLE** result) = 0;
     virtual HRESULT STDMETHODCALLTYPE Open(
-        const wchar_t* HTUser,
-        const wchar_t* HTPassword,
-        const char* FileName,
-        HTHANDLE** result) = 0;
+        const wchar_t* HTUser, const wchar_t* HTPassword,
+        const char* FileName, HTHANDLE** result) = 0;
 
     virtual HRESULT STDMETHODCALLTYPE Close(HTHANDLE* ht) = 0;
     virtual HRESULT STDMETHODCALLTYPE Insert(HTHANDLE* ht, const Element* element) = 0;

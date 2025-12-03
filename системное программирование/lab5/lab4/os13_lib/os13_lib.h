@@ -16,7 +16,7 @@ extern IHT* g_pHT;
     int MaxKeyLength,
     int MaxPayloadLength,
     const char* FileName,
-     const wchar_t* groupname,
+    const wchar_t* HTUsersGroup,
     HTHANDLE** result
 );
 
@@ -24,6 +24,12 @@ extern IHT* g_pHT;
     const char* FileName,
     HTHANDLE** result
 );
+ OS13_LIB_API HRESULT HTOpen(
+     const wchar_t* HTUser,
+     const wchar_t* HTPassword,
+     const char* FileName,
+     HTHANDLE** result
+ );
 
  OS13_LIB_API HRESULT HTClose(
     HTHANDLE* ht

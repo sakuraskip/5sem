@@ -1,21 +1,13 @@
-const WebSocket = require('ws');
-const fs = require('fs');
-const path = require('path');
+const rpcws = require("rpc-websockets").Client;
+const ws = new rpcws("ws://localhost:4000/");
 
+process.stdin.setEncoding("utf8");
+process.stdin.on("data", (chunk) => {
 
-const ws = new WebSocket('ws://localhost:4000');
-
-ws.on('open',()=>
-{
-    console.log('connected');
-});
-process.stdin.setEncoding('utf-8');
-process.stdin.on('data',(data)=>
-{
-    let event = data.toString().toUpperCase().trim();
-    if(event === 'A' || event === 'B' || event === 'C')
-    {
-        console.log('event ');
-        ws.send(JSON.stringify({event}))
+    let eventLetter = chunk.trim().toUpperCase();
+    if (eventLetter === "A" || eventLetter === "B" || eventLetter === "C") {
+      console.log(`event ${eventLetter} sent`);
+      ws.notify(eventLetter);
     }
-})
+  
+});

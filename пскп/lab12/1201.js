@@ -3,41 +3,35 @@ const fs = require('fs');
 const path = require('path');
 const url = require('url');
 const WebSocket = require('ws');
+const RPC = require('rpc-websockets').Server;
+
+
+const rpc = new RPC({
+    port: 3000,
+    host: 'localhost'
+});
+rpc.event('notification');
 
 const backupfolder = "backup";
 const jsonPath = "StudentList.json"
 
-// WebSocket клиенты
-const clients = new Set();
 
 function sendNotification(msg) {
     let notif = {
         id: Math.random()*10,
         msg,
         timestamp: Date.now()
-    }
-    clients.forEach(cl => {
-        if (cl.readyState === WebSocket.OPEN) {
-            cl.send(JSON.stringify(notif));
-        }
-    });
+    };
     console.log('notif send:', msg);
+    rpc.emit('notification', notif);
 }
 
-const wss = new WebSocket.Server({port:3000});
-wss.on('connection',(ws) => {
-    clients.add(ws);
+rpc.on('connection', () => {
     console.log('client connected');
+});
 
-    ws.on('close',() => {
-        clients.delete(ws);
-        console.log('client disconnected');
-    });
-
-    ws.on('error', (error) => {
-        console.log('WebSocket error:', error);
-        clients.delete(ws);
-    });
+rpc.on('disconnection', () => {
+    console.log('client disconnected');
 });
 
 const server = http.createServer(async (req, res) => {
@@ -193,7 +187,7 @@ const server = http.createServer(async (req, res) => {
                         let duplicate = students.find(st => st.id == student.id); 
                         if(duplicate) {
                             res.statusCode = 400;
-                            res.end(JSON.stringify({err: `student with id: ${student.id} already exists`})); // Исправлено на student.id
+                            res.end(JSON.stringify({err: `student with id: ${student.id} already exists`}));
                             break;
                         }
 
@@ -237,7 +231,7 @@ const server = http.createServer(async (req, res) => {
                         let filetext = await fs.promises.readFile(jsonPath);
                         let students = JSON.parse(filetext);
 
-                        let oldstIndex = students.findIndex(st => st.id == updatedstudent.id); // Исправлено на ==
+                        let oldstIndex = students.findIndex(st => st.id == updatedstudent.id); 
                         if(oldstIndex === -1) {
                             res.statusCode = 404;
                             res.end(JSON.stringify({err: `no student with id ${updatedstudent.id} found`}));
