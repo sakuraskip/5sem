@@ -63,40 +63,6 @@ int main(int argc, char** argv)
             << " maxkeylength: " << ht->MaxKeyLength
             << " maxpayloadlength: " << ht->MaxPayloadLength << endl;
     }
-
-    cout << "trying opening with CORRECT login & password" << endl;
-    ht = nullptr;
-    hr = pIHT->Open(L"HTUser1",L"Password123!",filename, &ht);
-
-    if (ht == nullptr)
-    {
-        cout << "failed to open with password" << endl;
-        return 1;
-    }
-    cout << "OPENED WITH CORRECT USER AND PASSWORD" << endl;
-    cout << "trying opening with WRONG login & password" << endl;
-    ht = nullptr;
-    hr = pIHT->Open(L"HTUser2", L"Password123!", filename, &ht);
-
-    if (ht == nullptr)
-    {
-        cout << "failed to open with WRONG USER" << endl;
-    }
-    ht = nullptr;
-    hr = pIHT->Open(L"HTUser1", L"Password123!", filename, &ht);
-
-    if (ht == nullptr)
-    {
-        cout << "failed to open with password" << endl;
-        return 1;
-    }
-    cout << "ht-storage opened\nfilename: " << filename
-        << " snapInterval: " << ht->SecSnapshotInterval
-        << " capacity: " << ht->Capacity
-        << " maxkeylength: " << ht->MaxKeyLength
-        << " maxpayloadlength: " << ht->MaxPayloadLength << endl;
-    cout << "\npress any key to close the application " << endl;
-
     do
     {
         Sleep(ht->SecSnapshotInterval * 1000);

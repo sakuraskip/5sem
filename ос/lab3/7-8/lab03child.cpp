@@ -61,7 +61,7 @@ int main(int argc, char** argv)
         }
         for(int i = 0;i<primeCounter;i++)
         {
-            cout << primeNumber[i] << " ";
+            cout << i << ": " <<  primeNumber[i] << " ";
         }
         cout << endl;
         delete[] primeNumber;

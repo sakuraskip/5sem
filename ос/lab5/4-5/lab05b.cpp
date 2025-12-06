@@ -2,7 +2,7 @@
 #include <iostream>
 
 using namespace std;
-//1: lab05b.exe 4294967295 32768 32768
+//1: lab05b.exe 4294967295 32 32
 //2: lab05b.exe 4294967295 16384 128
 //3: lab05b.exe 1 16384 128
 int main(int argc, char** argv)

@@ -40,7 +40,7 @@ bool InitMutexes()
     return true;
 }
 
-namespace HT_SECURITY {
+namespace Los_Angeles_Police_Departament {
     BOOL IsUserInGroup(LPCWSTR userName, LPCWSTR groupName) {
         NET_API_STATUS status;
         LPLOCALGROUP_USERS_INFO_0 pGroups = NULL;
@@ -474,21 +474,21 @@ public:
     {
         if (!FileName || !HTUsersGroup || !result) return E_INVALIDARG;
 
-        if (!HT_SECURITY::DoesGroupExist(HTUsersGroup)) {
+        if (!Los_Angeles_Police_Departament::DoesGroupExist(HTUsersGroup)) {
             lastErrorHT = ERROR_NO_SUCH_ALIAS;
             return E_ACCESSDENIED;
         }
 
         wchar_t currentUser[256];
         DWORD size = 256;
-        if (!HT_SECURITY::GetCurrentUserName(currentUser, size)) {
+        if (!Los_Angeles_Police_Departament::GetCurrentUserName(currentUser, size)) {
             lastErrorHT = GetLastError();
             return E_FAIL;
         }
 
 
-        BOOL isInGroup = HT_SECURITY::IsUserInGroup(currentUser, HTUsersGroup);
-        BOOL isAdmin = HT_SECURITY::IsUserAdministrator();
+        BOOL isInGroup = Los_Angeles_Police_Departament::IsUserInGroup(currentUser, HTUsersGroup);
+        BOOL isAdmin = Los_Angeles_Police_Departament::IsUserAdministrator();
 
         if (!isInGroup || !isAdmin) {
             lastErrorHT = ERROR_ACCESS_DENIED;
@@ -589,7 +589,7 @@ public:
 
         wchar_t currentUser[256];
         DWORD size = 256;
-        if (!HT_SECURITY::GetCurrentUserName(currentUser, size)) {
+        if (!Los_Angeles_Police_Departament::GetCurrentUserName(currentUser, size)) {
             lastErrorHT = GetLastError();
             CloseHandle(ht->File);
             delete ht;
@@ -597,7 +597,7 @@ public:
             return E_FAIL;
         }
 
-        if (!HT_SECURITY::IsUserInGroup(currentUser, ht->HTUsersGroup)) {
+        if (!Los_Angeles_Police_Departament::IsUserInGroup(currentUser, ht->HTUsersGroup)) {
             lastErrorHT = ERROR_ACCESS_DENIED;
             CloseHandle(ht->File);
             delete ht;
@@ -660,7 +660,7 @@ public:
         }
 
 
-        if (!HT_SECURITY::CheckUserPassword(HTUser, HTPassword)) {
+        if (!Los_Angeles_Police_Departament::CheckUserPassword(HTUser, HTPassword)) {
             lastErrorHT = ERROR_LOGON_FAILURE;
             CloseHandle(ht->File);
             delete ht;
@@ -668,7 +668,7 @@ public:
             return E_ACCESSDENIED;
         }
 
-        if (!HT_SECURITY::IsUserInGroup(HTUser, ht->HTUsersGroup)) {
+        if (!Los_Angeles_Police_Departament::IsUserInGroup(HTUser, ht->HTUsersGroup)) {
             lastErrorHT = ERROR_ACCESS_DENIED;
             CloseHandle(ht->File);
             delete ht;

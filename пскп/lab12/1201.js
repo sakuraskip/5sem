@@ -33,7 +33,20 @@ rpc.on('connection', () => {
 rpc.on('disconnection', () => {
     console.log('client disconnected');
 });
-
+fs.watch(path.join(__dirname,backupfolder),(event,f)=>
+{
+    if(f)
+    {
+        sendNotification(`backup folder changed, file:${f}  event: ` + event);
+    }
+});
+fs.watch(path.join(__dirname,jsonPath),(event,f)=>
+{
+    if(f)
+    {
+        sendNotification('student.json changed, event: ' + event);
+    }
+});
 const server = http.createServer(async (req, res) => {
     let parsedUrl = url.parse(req.url, true);
     let pathname = parsedUrl.pathname;
@@ -72,7 +85,7 @@ const server = http.createServer(async (req, res) => {
                         }
 
                         res.statusCode = 200;
-                        sendNotification('backups deleted after date: ' + dateparm + ', count: ' + deletedCount);
+                        // sendNotification('backups deleted after date: ' + dateparm + ', count: ' + deletedCount);
                         res.end(JSON.stringify({msg: 'backups deleted', count: deletedCount}));
                     }
                     break;
@@ -119,7 +132,7 @@ const server = http.createServer(async (req, res) => {
                                 await fs.promises.writeFile(path.join(backupfolder, backupName), filetext);
 
                                 res.statusCode = 201;
-                                sendNotification('backup created: ' + backupName);
+                                // sendNotification('backup created: ' + backupName);
                                 res.end(JSON.stringify({msg: 'backup created'}));
                             } catch (error) {
                                 res.statusCode = 500;
@@ -194,7 +207,7 @@ const server = http.createServer(async (req, res) => {
                         students.push(student);
                         await fs.promises.writeFile(jsonPath, JSON.stringify(students, null, 2));
                         res.statusCode = 201;
-                        sendNotification('student created id: ' + student.id);
+                        // sendNotification('student created id: ' + student.id);
                         res.end(JSON.stringify(student));
                     }
                     break;
@@ -240,7 +253,7 @@ const server = http.createServer(async (req, res) => {
 
                         students[oldstIndex] = updatedstudent;
                         await fs.promises.writeFile(jsonPath, JSON.stringify(students, null, 2));
-                        sendNotification('student updated id: ' + updatedstudent.id);
+                        // sendNotification('student updated id: ' + updatedstudent.id);
                         res.statusCode = 200;
                         res.end(JSON.stringify(updatedstudent));
                     }
@@ -269,7 +282,7 @@ const server = http.createServer(async (req, res) => {
 
                         let deletedStudent = students.splice(oldstIndex, 1)[0];
                         await fs.promises.writeFile(jsonPath, JSON.stringify(students, null, 2));
-                        sendNotification('student deleted id: ' + deletedStudent.id);
+                        // sendNotification('student deleted id: ' + deletedStudent.id);
                         res.statusCode = 200;
                         res.end(JSON.stringify(deletedStudent));
                     }

@@ -7,7 +7,7 @@ void PrintUsage() {
 }
 
 int main(int argc, char* argv[]) {
-    argc = 6;
+    //argc = 6;
     if (argc != 6) {
         PrintUsage();
         return 1;
@@ -20,16 +20,16 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    /*const char* fileName = argv[1];
+    const char* fileName = argv[1];
     int capacity = atoi(argv[2]);
     int maxKeyLength = atoi(argv[3]);
     int maxPayloadLength = atoi(argv[4]);
-    int snapshotInterval = atoi(argv[5]);*/
-    const char* fileName = "1.ht";
+    int snapshotInterval = atoi(argv[5]);
+    /*const char* fileName = "1.ht";
     int capacity = 100;
     int maxKeyLength = 10;
     int maxPayloadLength = 10;
-    int snapshotInterval = 30;
+    int snapshotInterval = 30;*/
 
 
     if (capacity <= 0 || maxKeyLength <= 0 || maxPayloadLength <= 0 || snapshotInterval <= 0) {
