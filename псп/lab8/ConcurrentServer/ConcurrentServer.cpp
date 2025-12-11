@@ -14,52 +14,10 @@ string libraryName = "ServiceLibrary";
 typedef HANDLE(__cdecl* dll_SSS)(char* id, LPVOID prm);
 HMODULE hServiceDll = NULL;
 dll_SSS pfnSSS = NULL;
-
-bool LoadServiceDll()
-{
-    hServiceDll = LoadLibraryA("..\\Debug\\ServiceLibrary.dll");
-    if (!hServiceDll)
-    {
-        cerr << "LoadLibrary failed: " << endl;
-        return false;
-    }
-
-    pfnSSS = (dll_SSS)GetProcAddress(hServiceDll, "SSS");
-    if (!pfnSSS)
-    {
-        cerr << "GetProcAddress failed: " << GetLastError() << endl;
-        FreeLibrary(hServiceDll);
-        return false;
-    }
-    return true;
-}
-
-void UnloadServiceDll()
-{
-    if (hServiceDll)
-    {
-        FreeLibrary(hServiceDll);
-        hServiceDll = NULL;
-        pfnSSS = NULL;
-    }
-}
+HANDLE g_hAcceptThread = NULL;
 
 
-DWORD WINAPI EchoServer(LPVOID param);
-DWORD WINAPI TimeServer(LPVOID param);
-DWORD WINAPI RandServer(LPVOID param);
-DWORD WINAPI GarbageCleaner(LPVOID param);
 
-
-enum CommandType { cmd_start, cmd_stop, cmd_get, cmd_unknown, cmd_exit };
-
-CommandType ParseCommand(const char* cmd)
-{
-    if (strcmp(cmd, "start") == 0) return cmd_start;
-    if (strcmp(cmd, "stop") == 0) return cmd_stop;
-    if (strcmp(cmd, "exit") == 0) return cmd_exit;
-    return cmd_unknown;
-}
 
 struct Contact
 {
@@ -99,11 +57,141 @@ struct Contact
     }
 };
 
+struct APCParam {
+    Contact* contact;
+    SYSTEMTIME startTime;
+    SYSTEMTIME endTime;
+    bool isStart; 
+};
+
+enum CommandType { cmd_start, cmd_stop, cmd_get, cmd_unknown, cmd_exit };
+
+CommandType ParseCommand(const char* cmd)
+{
+    if (strcmp(cmd, "start") == 0) return cmd_start;
+    if (strcmp(cmd, "stop") == 0) return cmd_stop;
+    if (strcmp(cmd, "exit") == 0) return cmd_exit;
+    return cmd_unknown;
+}
+
 list<Contact> contacts;
 CRITICAL_SECTION scListContact;
 SOCKET sS = INVALID_SOCKET;
 volatile CommandType g_cmd = cmd_start;
 int port = 2000;
+
+bool LoadServiceDll()
+{
+    hServiceDll = LoadLibraryA("..\\Debug\\ServiceLibrary.dll");
+    if (!hServiceDll)
+    {
+        cerr << "LoadLibrary failed: " << endl;
+        return false;
+    }
+
+    pfnSSS = (dll_SSS)GetProcAddress(hServiceDll, "SSS");
+    if (!pfnSSS)
+    {
+        cerr << "GetProcAddress failed: " << GetLastError() << endl;
+        FreeLibrary(hServiceDll);
+        return false;
+    }
+    return true;
+}
+
+void UnloadServiceDll()
+{
+    if (hServiceDll)
+    {
+        FreeLibrary(hServiceDll);
+        hServiceDll = NULL;
+        pfnSSS = NULL;
+    }
+}
+void __stdcall StartServiceAPC(ULONG_PTR dwParam) {
+    APCParam* param = (APCParam*)dwParam;
+    if (param && param->contact) {
+        char timeStr[9];
+        sprintf_s(timeStr, "%02d:%02d:%02d",
+            param->startTime.wHour, param->startTime.wMinute, param->startTime.wSecond);
+
+        cout << "---------------START service----------------" << endl;
+        cout << "server: " << param->contact->srvname << endl;
+        cout << "start time: " << timeStr << endl;
+        cout << "client: " << inet_ntoa(param->contact->prms.sin_addr)
+            << ":" << ntohs(param->contact->prms.sin_port) << endl;
+        cout << "--------------------------------------------" << endl;
+    }
+    delete param;
+}
+
+void __stdcall FinishServiceAPC(ULONG_PTR dwParam) {
+    APCParam* param = (APCParam*)dwParam;
+    if (param && param->contact) {
+        char timeStr[9];
+        sprintf_s(timeStr, "%02d:%02d:%02d",
+            param->endTime.wHour, param->endTime.wMinute, param->endTime.wSecond);
+
+        cout << "---------------finish service----------------" << endl;
+        cout << "Server: " << param->contact->srvname << endl;
+        cout << "End time: " << timeStr << endl;
+        cout << "client: " << inet_ntoa(param->contact->prms.sin_addr)
+            << ":" << ntohs(param->contact->prms.sin_port) << endl;
+        cout << "Status: " << param->contact->msg << endl;
+        cout << "----------------------------------------------" << endl;
+        EnterCriticalSection(&scListContact);
+        if (param->contact->htimer) {
+            CancelWaitableTimer(param->contact->htimer);
+            CloseHandle(param->contact->htimer);
+            param->contact->htimer = NULL;
+        }
+        LeaveCriticalSection(&scListContact);
+    }
+    delete param;
+}
+void _stdcall TimerAPCProc(
+    LPVOID lpArgToCompletionRoutine,
+    DWORD dwTimerLowValue,
+    DWORD dwTimerHighValue
+) {
+    Contact* contact = (Contact*)lpArgToCompletionRoutine;
+    if (!contact) return;
+    cout << "timerapcproc" << endl;
+    EnterCriticalSection(&scListContact);
+
+    if (contact->hthread && contact->type == Contact::CONTACT) {
+        TerminateThread(contact->hthread, 0);
+        CloseHandle(contact->hthread);
+        contact->hthread = NULL;
+
+        contact->SetST(Contact::TIMEOUT, "Service timeout (exceeded 1 minute)");
+
+        if (contact->s != INVALID_SOCKET) {
+            closesocket(contact->s);
+            contact->s = INVALID_SOCKET;
+        }
+
+        if (contact->htimer) {
+            CancelWaitableTimer(contact->htimer);
+            CloseHandle(contact->htimer);
+            contact->htimer = NULL;
+        }
+
+        contact->type = Contact::EMPTY;
+
+        cout << "TimerAPC: Service timeout, thread terminated" << endl;
+    }
+
+    LeaveCriticalSection(&scListContact);
+}
+
+DWORD WINAPI EchoServer(LPVOID param);
+DWORD WINAPI TimeServer(LPVOID param);
+DWORD WINAPI RandServer(LPVOID param);
+DWORD WINAPI GarbageCleaner(LPVOID param);
+
+
+
 
 DWORD WINAPI GarbageCleaner(LPVOID param)
 {
@@ -112,7 +200,7 @@ DWORD WINAPI GarbageCleaner(LPVOID param)
     while (*cmd != cmd_exit)
     {
         EnterCriticalSection(&scListContact);
-
+        
         auto it = contacts.begin();
         while (it != contacts.end())
         {
@@ -148,6 +236,7 @@ DWORD WINAPI GarbageCleaner(LPVOID param)
         LeaveCriticalSection(&scListContact);
 
         Sleep(5000);
+
     }
 
     cout << "GarbageCleaner: exiting" << endl;
@@ -164,6 +253,10 @@ bool AcceptCycle(int iterations)
         if (c.s == INVALID_SOCKET)
         {
             int err = WSAGetLastError();
+            if (err == WSAEWOULDBLOCK) //no connections, callin' sleep
+            {
+                SleepEx(0, TRUE);
+            }
             break;
         }
         else
@@ -184,7 +277,7 @@ bool AcceptCycle(int iterations)
 }
 bool SetSocketBlockingMode(SOCKET s, bool blocking)
 {
-    u_long mode = blocking ? 0 : 1;  // 0 - block
+    u_long mode = blocking ? 0 : 1;  //0 - blocking
     int res = ioctlsocket(s, FIONBIO, &mode);
     if (res == SOCKET_ERROR)
     {
@@ -212,11 +305,11 @@ void CommandsCycle(CommandType& cmd)
             break;
 
         case cmd_get:
-            Sleep(100);
+            SleepEx(0,TRUE);
             break;
 
         default:
-            Sleep(100);
+            SleepEx(0,TRUE);
             break;
         }
 
@@ -290,6 +383,18 @@ DWORD WINAPI DispatchServer(LPVOID param)
                         ++contact;
                         continue;
                     }
+                    SYSTEMTIME startTime;
+                    GetLocalTime(&startTime);
+
+                    APCParam* startParam = new APCParam();
+                    startParam->contact = &(*contact);
+                    startParam->startTime = startTime;
+                    startParam->isStart = true;
+                    cout << "ale" << endl;
+                    if (!QueueUserAPC(StartServiceAPC, g_hAcceptThread, (ULONG_PTR)startParam)) {
+                        cout << "QueueUserAPC for start failed: " << GetLastError() << endl;
+                        delete startParam;
+                    }
 
                     contact->type = Contact::CONTACT;
                     contact->SetST(Contact::WORK, (commandFromClient + " server requested").c_str());
@@ -305,7 +410,23 @@ DWORD WINAPI DispatchServer(LPVOID param)
                         CloseHandle(contact->hthread);
                         contact->hthread = NULL;
                     }
+                    contact->htimer = CreateWaitableTimer(NULL, FALSE, NULL);
+                    if (contact->htimer) {
+                        LARGE_INTEGER dueTime;
+                        dueTime.QuadPart = -60 * 10000000; 
 
+                        if (!SetWaitableTimer(contact->htimer, &dueTime, 0, TimerAPCProc, (PVOID) & (*contact), FALSE)) {
+                            cout << "DispatchServer: SetWaitableTimer failed" << endl;
+                            CloseHandle(contact->htimer);
+                            contact->htimer = NULL;
+                        }
+                        else {
+                            cout << "DispatchServer: timer set for 60 seconds for service" << endl;
+                        }
+                    }
+                    else {
+                        cout << "DispatchServer: CreateWaitableTimer failed" << endl;
+                    }
                     HANDLE hThread = pfnSSS(id, (LPVOID)(pContact));
                     if (hThread)
                     {
@@ -332,6 +453,17 @@ DWORD WINAPI DispatchServer(LPVOID param)
                 {
                     DWORD exitCode;
                     GetExitCodeThread(contact->hthread, &exitCode);
+                    SYSTEMTIME endTime;
+                    GetLocalTime(&endTime);
+
+                    APCParam* finishParam = new APCParam();
+                    finishParam->contact = &(*contact);
+                    finishParam->endTime = endTime;
+                    finishParam->isStart = false;
+                    if (!QueueUserAPC(FinishServiceAPC, g_hAcceptThread, (ULONG_PTR)finishParam)) {
+                        cout << "QueueUserAPC for finish failed: " << GetLastError() << endl;
+                        delete finishParam;
+                    }
                     cout << "DispatchServer: DLL thread finished with code " << exitCode << ", marking for cleanup" << endl;
 
                     CloseHandle(contact->hthread);
@@ -343,7 +475,7 @@ DWORD WINAPI DispatchServer(LPVOID param)
             ++contact;
         }
         LeaveCriticalSection(&scListContact);
-        Sleep(50);
+        SleepEx(50,TRUE);
     }
     return 0;
 }
@@ -385,7 +517,14 @@ DWORD WINAPI AcceptServer(LPVOID param)
     {
         cerr << "acceptServer exception: " << ex << endl;
     }
-    ExitThread(*(DWORD*)param);
+    EnterCriticalSection(&scListContact);
+    for (auto& contact : contacts)
+    {
+        contact.type = Contact::EMPTY;
+    }
+    LeaveCriticalSection(&scListContact);
+
+    cout << "AcceptServer: exiting" << endl;
     return 0;
 }
 
@@ -415,17 +554,20 @@ int main(int argc, char** argv)
     InitializeCriticalSection(&scListContact);
     HANDLE threads[10];
     threads[0] = CreateThread(NULL, 0, AcceptServer, (LPVOID)&g_cmd, 0, NULL);
-    threads[1] = CreateThread(NULL, 0, DispatchServer, (LPVOID)&g_cmd, 0, NULL);
-    cout << "press any key to start the garbage cleaner " << endl;
-    cin.get();
-    threads[2] = CreateThread(NULL, 0, GarbageCleaner, (LPVOID)&g_cmd, 0, NULL);
-    
     if (threads[0] == NULL)
     {
         cerr << "create thread failed" << endl;
         DeleteCriticalSection(&scListContact);
         return 1;
     }
+    g_hAcceptThread = threads[0];
+
+    threads[1] = CreateThread(NULL, 0, DispatchServer, (LPVOID)&g_cmd, 0, NULL);
+    cout << "press any key to start the garbage cleaner " << endl;
+    cin.get();
+    threads[2] = CreateThread(NULL, 0, GarbageCleaner, (LPVOID)&g_cmd, 0, NULL);
+    
+    
 
     WaitForMultipleObjects(3,threads,TRUE, INFINITE);
 
